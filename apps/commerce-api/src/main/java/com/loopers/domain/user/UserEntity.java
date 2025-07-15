@@ -30,14 +30,30 @@ public class UserEntity extends BaseEntity {
 	}
 
 	public UserEntity(String userId, String name, Gender gender, String birth, String email) {
+		validateUserId(userId);
+		validateEmail(email);
+		validateBirth(birth);
+
+		this.userId = userId;
+		this.name = name;
+		this.gender = gender;
+		this.birth = LocalDate.parse(birth);
+		this.email = email;
+	}
+
+	private void validateUserId(String userId) {
 		if (userId == null || !USER_ID_PATTERN.matcher(userId).matches()) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "userId는 영문/숫자 10자 이내로만 가능합니다.");
 		}
+	}
 
+	private void validateEmail(String email) {
 		if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "email 형식이 잘못되었습니다.");
 		}
+	}
 
+	private void validateBirth(String birth) {
 		if (birth == null || !BIRTH_PATTERN.matcher(birth).matches()) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "생년월일 형식이 잘못되었습니다.");
 		}
@@ -47,11 +63,5 @@ public class UserEntity extends BaseEntity {
 		} catch (DateTimeParseException e) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "생년월일 형식이 잘못되었습니다.");
 		}
-
-		this.userId = userId;
-		this.name = name;
-		this.gender = gender;
-		this.birth = LocalDate.parse(birth);
-		this.email = email;
 	}
 }
