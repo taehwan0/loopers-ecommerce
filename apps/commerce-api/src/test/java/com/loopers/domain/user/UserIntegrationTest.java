@@ -24,7 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 @SpringBootTest
-class UserFacadeIntegrationTest {
+class UserIntegrationTest {
 
 	@Autowired
 	private UserFacade userFacade;
