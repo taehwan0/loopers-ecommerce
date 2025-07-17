@@ -7,7 +7,9 @@ import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.interfaces.api.user.UserV1Dto.RegisterUserRequest;
 import com.loopers.interfaces.api.user.UserV1Dto.UserResponse;
 import com.loopers.support.error.ErrorType;
+import com.loopers.utils.DatabaseCleanUp;
 import java.util.function.Function;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,14 @@ class UserV1ApiE2ETest {
 
 	@Autowired
 	private TestRestTemplate testRestTemplate;
+
+	@Autowired
+	private DatabaseCleanUp databaseCleanUp;
+
+	@BeforeEach
+	void cleanUp() {
+		databaseCleanUp.truncateAllTables();
+	}
 
 	@DisplayName("POST /api/v1/users")
 	@Nested

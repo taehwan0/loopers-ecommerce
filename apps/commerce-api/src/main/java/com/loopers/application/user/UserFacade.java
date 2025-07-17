@@ -4,6 +4,7 @@ package com.loopers.application.user;
 import com.loopers.domain.user.Gender;
 import com.loopers.domain.user.UserEntity;
 import com.loopers.domain.user.UserService;
+import com.loopers.domain.user.UserValidator;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,8 @@ public class UserFacade {
 
 	@Transactional
 	public UserInfo register(String userId, String name, String gender, String birth, String email) {
+		UserValidator.validateBeforeCreateUser(userId, birth, email);
+
 		if (userService.findByUerId(userId).isEmpty()) {
 			UserEntity userEntity = userService.create(userId, name, Gender.of(gender), birth, email);
 			return UserInfo.from(userEntity);

@@ -2,6 +2,7 @@ package com.loopers.interfaces.api.user;
 
 import com.loopers.application.user.UserInfo;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 public class UserV1Dto {
 
@@ -28,15 +29,15 @@ public class UserV1Dto {
 
 
 	public record RegisterUserRequest(
-			@NotNull
+			@Pattern(regexp = "^[a-zA-Z0-9]{1,10}$")
 			String userId,
 			@NotNull
 			String name,
 			@NotNull
 			String gender,
-			@NotNull
+			@Pattern(regexp = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
 			String birth,
-			@NotNull
+			@Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
 			String email
 	) {
 
