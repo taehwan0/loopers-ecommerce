@@ -12,6 +12,7 @@ import com.loopers.application.user.UserInfo;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,6 +28,9 @@ class UserFacadeIntegrationTest {
 
 	@Autowired
 	private UserFacade userFacade;
+
+	@Autowired
+	private UserService userService;
 
 	@MockitoSpyBean
 	private UserRepository userRepository;
@@ -167,6 +171,37 @@ class UserFacadeIntegrationTest {
 
 			// assert
 			assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+		}
+	}
+
+	@DisplayName("정보 조회 테스트")
+	@Nested
+	class GetUser {
+
+		@DisplayName("해당 ID의 회원이 존재하는 경우, 회원 정보가 반환된다.")
+		@Test
+		void returnUserInfo_whenUserIsExists() {
+			// arrange
+			UserInfo existUserInfo = userFacade.register("user01", "홍길동", "M", "1990-01-01", "foo@example.com");
+
+			// act
+			UserInfo userInfo = userFacade.getUser(existUserInfo.id());
+
+			// assert
+			assertThat(existUserInfo).isEqualTo(userInfo);
+		}
+
+		@DisplayName("해당 ID의 회원이 존재하지 않는 경우, Null이 반환된다.")
+		@Test
+		void returnNull_whenUserIsNotFound() {
+			// arrange
+			Long userId = -999L;
+
+			// act
+			Optional<UserEntity> user = userService.getUser(userId);
+
+			// assert
+			assertThat(user.isEmpty()).isTrue();
 		}
 	}
 }
