@@ -25,4 +25,11 @@ public class UserFacade {
 
 		throw new CoreException(ErrorType.CONFLICT, "이미 사용중인 ID 입니다.");
 	}
+
+	@Transactional(readOnly = true)
+	public UserInfo getUser(Long id) {
+		return userService.getUser(id)
+				.map(UserInfo::from)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[id = " + id + "] 사용자를 찾을 수 없습니다."));
+	}
 }

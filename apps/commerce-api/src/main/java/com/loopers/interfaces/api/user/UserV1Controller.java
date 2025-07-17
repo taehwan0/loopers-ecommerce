@@ -7,6 +7,8 @@ import com.loopers.interfaces.api.user.UserV1Dto.RegisterUserRequest;
 import com.loopers.interfaces.api.user.UserV1Dto.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,5 +35,11 @@ public class UserV1Controller implements UserV1ApiSpec {
 				request.email()
 		);
 		return ApiResponse.success(UserV1Dto.UserResponse.from(userInfo));
+	}
+
+	@Override
+	@GetMapping("/{id}")
+	public ApiResponse<UserResponse> getUser(@PathVariable Long id) {
+		return ApiResponse.success(UserV1Dto.UserResponse.from(userFacade.getUser(id)));
 	}
 }

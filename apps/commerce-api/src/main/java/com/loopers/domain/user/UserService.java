@@ -18,4 +18,8 @@ public class UserService {
 		UserEntity userEntity = new UserEntity(userId, name, gender, birth, email);
 		return userRepository.save(userEntity);
 	}
+
+	public Optional<UserEntity> getUser(Long id) {
+		return userRepository.findById(id);
+	}
 }
