@@ -27,7 +27,7 @@ class UserEntityTest {
 		void fail_whenUserIdIsInvalid(String userId) {
 			// arrange
 			final String name = "홍길동";
-			final Gender gender = Gender.MALE;
+			final Gender gender = Gender.M;
 			final String birth = "1990-01-01";
 			final String email = "user@example.com";
 
@@ -57,7 +57,7 @@ class UserEntityTest {
 			// arrange
 			final String userId = "user123456";
 			final String name = "홍길동";
-			final Gender gender = Gender.MALE;
+			final Gender gender = Gender.M;
 			final String birth = "1990-01-01";
 
 			// act
@@ -70,7 +70,7 @@ class UserEntityTest {
 			assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
 		}
 
-		@DisplayName("생년월일 형식이 yyyy-MM-dd 형식에 맞지 않ㅇ면, User 객체 생성에 실패한다.")
+		@DisplayName("생년월일 형식이 yyyy-MM-dd 형식에 맞지 않으면, User 객체 생성에 실패한다.")
 		@ParameterizedTest
 		@ValueSource(strings = {
 				"",
@@ -84,7 +84,7 @@ class UserEntityTest {
 			// arrange
 			final String userId = "user123456";
 			final String name = "홍길동";
-			final Gender gender = Gender.MALE;
+			final Gender gender = Gender.M;
 			final String email = "foo@example.com";
 
 			// act
