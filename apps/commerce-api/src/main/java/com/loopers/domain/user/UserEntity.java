@@ -3,12 +3,17 @@ package com.loopers.domain.user;
 import com.loopers.domain.BaseEntity;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.regex.Pattern;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Getter
+@NoArgsConstructor
 @Table(name = "member")
 @Entity
 public class UserEntity extends BaseEntity {
@@ -19,15 +24,12 @@ public class UserEntity extends BaseEntity {
 	private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
 	private static final Pattern BIRTH_PATTERN = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2}$");
 
+	@Column(name = "user_id", nullable = false, unique = true, updatable = false)
 	private String userId;
 	private String name;
 	private Gender gender;
 	private LocalDate birth;
 	private String email;
-
-	protected UserEntity() {
-		super();
-	}
 
 	public UserEntity(String userId, String name, Gender gender, String birth, String email) {
 		validateUserId(userId);

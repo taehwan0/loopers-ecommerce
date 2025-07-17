@@ -1,0 +1,28 @@
+package com.loopers.application.user;
+
+
+import com.loopers.domain.user.Gender;
+import com.loopers.domain.user.UserEntity;
+import com.loopers.domain.user.UserService;
+import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorType;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@RequiredArgsConstructor
+@Service
+public class UserFacade {
+
+	private final UserService userService;
+
+	@Transactional
+	public UserInfo register(String userId, String name, String gender, String birth, String email) {
+		if (userService.findByUerId(userId).isEmpty()) {
+			UserEntity userEntity = userService.create(userId, name, Gender.of(gender), birth, email);
+			return UserInfo.from(userEntity);
+		}
+
+		throw new CoreException(ErrorType.CONFLICT, "이미 사용중인 ID 입니다.");
+	}
+}
