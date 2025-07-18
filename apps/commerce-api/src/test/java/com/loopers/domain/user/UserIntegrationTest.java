@@ -7,6 +7,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.loopers.application.user.PointInfo;
 import com.loopers.application.user.UserFacade;
 import com.loopers.application.user.UserInfo;
 import com.loopers.support.error.CoreException;
@@ -189,6 +190,43 @@ class UserIntegrationTest {
 
 			// assert
 			assertThat(existUserInfo).isEqualTo(userInfo);
+		}
+
+		@DisplayName("해당 ID의 회원이 존재하지 않는 경우, Null이 반환된다.")
+		@Test
+		void returnNull_whenUserIsNotFound() {
+			// arrange
+			Long userId = -999L;
+
+			// act
+			Optional<UserEntity> user = userService.getUser(userId);
+
+			// assert
+			assertThat(user.isEmpty()).isTrue();
+		}
+	}
+
+	@DisplayName("포인트 조회 테스트")
+	@Nested
+	class GetPoint {
+
+		@DisplayName("해당 ID의 회원이 존재하는 경우, 포인트 정보가 반환된다.")
+		@Test
+		void returnPoint_whenUserIsExists() {
+			// arrange
+			UserInfo userInfo = userFacade.register("getPoint", "홍길동", "M", "2020-01-01", "foo@example.com");
+
+			// act
+			PointInfo pointInfo = userFacade.getUserPoint(userInfo.id());
+
+			// assert
+			assertAll(
+					() -> assertThat(pointInfo).isNotNull(),
+					() -> assertThat(pointInfo.pointValue()).isEqualTo(0)
+			);
+
+
+
 		}
 
 		@DisplayName("해당 ID의 회원이 존재하지 않는 경우, Null이 반환된다.")

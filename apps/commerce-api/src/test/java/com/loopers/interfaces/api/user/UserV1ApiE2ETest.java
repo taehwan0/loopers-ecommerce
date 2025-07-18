@@ -3,8 +3,11 @@ package com.loopers.interfaces.api.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import com.loopers.application.user.UserFacade;
+import com.loopers.application.user.UserInfo;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.interfaces.api.user.UserV1Dto.RegisterUserRequest;
+import com.loopers.interfaces.api.user.UserV1Dto.UserPointResponse;
 import com.loopers.interfaces.api.user.UserV1Dto.UserResponse;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
@@ -20,6 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +33,9 @@ class UserV1ApiE2ETest {
 
 	@Autowired
 	private TestRestTemplate testRestTemplate;
+
+	@Autowired
+	private UserFacade userFacade;
 
 	@Autowired
 	private DatabaseCleanUp databaseCleanUp;
@@ -277,6 +284,74 @@ class UserV1ApiE2ETest {
 					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND),
 					() -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL),
 					() -> assertThat(response.getBody().meta().errorCode()).isEqualTo(ErrorType.NOT_FOUND.getCode())
+			);
+		}
+	}
+
+	@DisplayName("GET /api/v1/users/{userId}/points")
+	@Nested
+	class GetUserPoints {
+
+		static final Function<Long, String> ENDPOINT_GET_POINTS = id -> "/api/v1/users/" + id + "/points";
+		static final String X_USER_ID_HEADER = "X-USER-ID";
+
+		@DisplayName("X-USER-ID 헤더가 없으면, 400 Bad Request 에러가 발생한다.")
+		@Test
+		void returnBadRequest_whenHeaderUserIdIsMissing() {
+			// arrange
+			Long userId = 1L;
+
+			// act
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {};
+			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS.apply(userId), HttpMethod.GET, null, responseType);
+
+			// assert
+			assertAll(
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+					() -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL),
+					() -> assertThat(response.getBody().meta().errorCode()).isEqualTo(ErrorType.BAD_REQUEST.getCode())
+			);
+		}
+
+		@DisplayName("존재하지 않는 사용자의 정보를 요청하면, 404 Not Found 에러가 발생한다.")
+		@Test
+		void returnNotFound_whenUserNotExists() {
+			// arrange
+			UserInfo adminInfo = userFacade.register("admin", "관리자", "M", "1990-01-01", "foo@example.com");
+			Long userId = -999L; // 정상적인 방법으로는 부여되지 않는 ID로 존재하지 않음을 검증한다.
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.set(X_USER_ID_HEADER, adminInfo.userId());
+
+			// act
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {};
+			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS.apply(userId), HttpMethod.GET, new HttpEntity<>(httpHeaders), responseType);
+
+			// assert
+			assertAll(
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND),
+					() -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL),
+					() -> assertThat(response.getBody().meta().errorCode()).isEqualTo(ErrorType.NOT_FOUND.getCode())
+			);
+		}
+
+		@DisplayName("존재하는 사용자의 정보를 요청하면, 해당 사용자의 포인트 정보를 반환한다.")
+		@Test
+		void returnUserPoints_whenUserExists() {
+			// arrange
+			UserInfo adminInfo = userFacade.register("admin", "관리자", "M", "1990-01-01", "foo@example.com");
+			Long userId = adminInfo.id();
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.set(X_USER_ID_HEADER, adminInfo.userId());
+
+			// act
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {};
+			ResponseEntity<ApiResponse<UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS.apply(userId), HttpMethod.GET, new HttpEntity<>(httpHeaders), responseType);
+
+			// assert
+			assertAll(
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
+					() -> assertThat(response.getBody()).isNotNull(),
+					() -> assertThat(response.getBody().data().pointValue()).isGreaterThanOrEqualTo(0)
 			);
 		}
 	}
