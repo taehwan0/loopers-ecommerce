@@ -224,9 +224,6 @@ class UserIntegrationTest {
 					() -> assertThat(pointInfo).isNotNull(),
 					() -> assertThat(pointInfo.pointValue()).isEqualTo(0)
 			);
-
-
-
 		}
 
 		@DisplayName("해당 ID의 회원이 존재하지 않는 경우, Null이 반환된다.")
@@ -242,4 +239,27 @@ class UserIntegrationTest {
 			assertThat(user.isEmpty()).isTrue();
 		}
 	}
+
+	@DisplayName("포인트 충전 테스트")
+	@Nested
+	class ChargePoint {
+
+		@DisplayName("존재하지 않는 사용자에 포인트를 충전하면 실패한다.")
+		@Test
+		void fail_whenUserIsNotFound() {
+			// arrange
+			String userId = "notfound";
+			int amount = 1000;
+
+			// act
+			CoreException exception = assertThrows(
+					CoreException.class,
+					() -> userFacade.chargePoint(userId, amount)
+			);
+
+			// assert
+			assertThat(exception.getErrorType()).isEqualTo(ErrorType.NOT_FOUND);
+		}
+	}
+
 }

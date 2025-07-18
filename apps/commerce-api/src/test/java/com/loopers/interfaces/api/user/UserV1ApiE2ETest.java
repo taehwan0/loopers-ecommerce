@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import com.loopers.application.user.UserFacade;
 import com.loopers.application.user.UserInfo;
 import com.loopers.interfaces.api.ApiResponse;
+import com.loopers.interfaces.api.user.UserV1Dto.ChargePointRequest;
 import com.loopers.interfaces.api.user.UserV1Dto.RegisterUserRequest;
 import com.loopers.interfaces.api.user.UserV1Dto.UserPointResponse;
 import com.loopers.interfaces.api.user.UserV1Dto.UserResponse;
@@ -31,6 +32,8 @@ import org.springframework.http.ResponseEntity;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UserV1ApiE2ETest {
 
+	private static final String REGISTERED_USER_ID = "registered";
+
 	@Autowired
 	private TestRestTemplate testRestTemplate;
 
@@ -43,6 +46,7 @@ class UserV1ApiE2ETest {
 	@BeforeEach
 	void cleanUp() {
 		databaseCleanUp.truncateAllTables();
+		userFacade.register(REGISTERED_USER_ID, "foo", "M", "1990-01-01", "foo@example.com");
 	}
 
 	@DisplayName("POST /api/v1/users")
@@ -302,7 +306,8 @@ class UserV1ApiE2ETest {
 			Long userId = 1L;
 
 			// act
-			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {};
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
+			};
 			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS.apply(userId), HttpMethod.GET, null, responseType);
 
 			// assert
@@ -323,7 +328,8 @@ class UserV1ApiE2ETest {
 			httpHeaders.set(X_USER_ID_HEADER, adminInfo.userId());
 
 			// act
-			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {};
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
+			};
 			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS.apply(userId), HttpMethod.GET, new HttpEntity<>(httpHeaders), responseType);
 
 			// assert
@@ -344,7 +350,8 @@ class UserV1ApiE2ETest {
 			httpHeaders.set(X_USER_ID_HEADER, adminInfo.userId());
 
 			// act
-			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {};
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
+			};
 			ResponseEntity<ApiResponse<UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS.apply(userId), HttpMethod.GET, new HttpEntity<>(httpHeaders), responseType);
 
 			// assert
@@ -352,6 +359,104 @@ class UserV1ApiE2ETest {
 					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
 					() -> assertThat(response.getBody()).isNotNull(),
 					() -> assertThat(response.getBody().data().pointValue()).isGreaterThanOrEqualTo(0)
+			);
+		}
+	}
+
+	@DisplayName("POST /api/v1/users/{userId}/points")
+	@Nested
+	class ChargeUserPoints {
+
+		static final String ENDPOINT_CHARGE_POINTS = "/api/v1/users/me/points";
+		static final String X_USER_ID_HEADER = "X-USER-ID";
+
+		@DisplayName("X-USER-ID 헤더가 없으면, 400 Bad Request 에러가 발생한다.")
+		@Test
+		void returnBadRequest_whenHeaderUserIdIsMissing() {
+			// arrange
+
+			// act
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
+			};
+			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_CHARGE_POINTS, HttpMethod.POST, null, responseType);
+
+			// assert
+			assertAll(
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+					() -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL),
+					() -> assertThat(response.getBody().meta().errorCode()).isEqualTo(ErrorType.BAD_REQUEST.getCode())
+			);
+		}
+
+		@DisplayName("존재하지 않는 대상이 포인트 충전을 요청하면, 404 Not Found 에러가 발생한다.")
+		@Test
+		void returnNotFound_whenUnknownUsersRequest() {
+			// arrange
+			String unknownUserId = "unknownUser";
+
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.set(X_USER_ID_HEADER, unknownUserId);
+			ChargePointRequest chargePointRequest = new ChargePointRequest(1000);
+			HttpEntity<ChargePointRequest> requestHttpEntity = new HttpEntity<>(chargePointRequest, httpHeaders);
+
+			// act
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
+			};
+			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_CHARGE_POINTS, HttpMethod.POST, requestHttpEntity, responseType);
+
+			// assert
+			assertAll(
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND),
+					() -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL),
+					() -> assertThat(response.getBody().meta().errorCode()).isEqualTo(ErrorType.NOT_FOUND.getCode())
+			);
+		}
+
+		@DisplayName("포인트 충전을 요청이 성공하면, 충전된 잔액을 반환한다.")
+		@Test
+		void returnTotalPoint_whenChargePointSuccessful() {
+			// arrange
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.set(X_USER_ID_HEADER, REGISTERED_USER_ID);
+			ChargePointRequest chargePointRequest = new ChargePointRequest(1000);
+			HttpEntity<ChargePointRequest> requestHttpEntity = new HttpEntity<>(chargePointRequest, httpHeaders);
+
+			// act
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
+			};
+			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> firstResponse = testRestTemplate.exchange(ENDPOINT_CHARGE_POINTS, HttpMethod.POST, requestHttpEntity, responseType);
+			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> secondResponse = testRestTemplate.exchange(ENDPOINT_CHARGE_POINTS, HttpMethod.POST, requestHttpEntity, responseType);
+
+			// assert
+			assertAll(
+					() -> assertThat(firstResponse.getStatusCode()).isEqualTo(HttpStatus.OK),
+					() -> assertThat(firstResponse.getBody()).isNotNull(),
+					() -> assertThat(firstResponse.getStatusCode()).isEqualTo(HttpStatus.OK),
+					() -> assertThat(firstResponse.getBody()).isNotNull(),
+					() -> assertThat(secondResponse.getBody().data().pointValue()).isEqualTo(firstResponse.getBody().data().pointValue() + 1000)
+			);
+		}
+
+		@DisplayName("0이하의 포인트를 충전하려고 하면, 400 Bad Request 에러가 발생한다.")
+		@ParameterizedTest
+		@ValueSource(ints = {Integer.MIN_VALUE, -1, 0})
+		void returnBadRequest_whenChargePointIsLessThanZero(int amount) {
+			// arrange
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.set(X_USER_ID_HEADER, REGISTERED_USER_ID);
+			ChargePointRequest chargePointRequest = new ChargePointRequest(amount);
+			HttpEntity<ChargePointRequest> requestHttpEntity = new HttpEntity<>(chargePointRequest, httpHeaders);
+
+			// act
+			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
+			};
+			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_CHARGE_POINTS, HttpMethod.POST, requestHttpEntity, responseType);
+
+			// assert
+			assertAll(
+					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+					() -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL),
+					() -> assertThat(response.getBody().meta().errorCode()).isEqualTo(ErrorType.BAD_REQUEST.getCode())
 			);
 		}
 	}
