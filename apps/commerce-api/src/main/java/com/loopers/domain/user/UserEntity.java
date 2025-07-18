@@ -34,4 +34,8 @@ public class UserEntity extends BaseEntity {
 		this.email = email;
 		this.point = new Point(0);
 	}
+
+	public void chargePoint(int pointValue) {
+		this.point.addPoint(pointValue);
+	}
 }

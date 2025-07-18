@@ -42,4 +42,14 @@ public class UserFacade {
 				.map(user -> PointInfo.from(user.getPoint()))
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[id = " + id + "] 사용자를 찾을 수 없습니다."));
 	}
+
+	@Transactional
+	public PointInfo chargePoint(String userId, int amount) {
+		return userService.findByUerId(userId)
+				.map(user -> {
+					user.chargePoint(amount);
+					return PointInfo.from(user.getPoint());
+				})
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[userId = " + userId + "] 사용자를 찾을 수 없습니다."));
+	}
 }

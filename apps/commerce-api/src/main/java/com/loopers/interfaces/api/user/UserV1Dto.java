@@ -2,6 +2,7 @@ package com.loopers.interfaces.api.user;
 
 import com.loopers.application.user.PointInfo;
 import com.loopers.application.user.UserInfo;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
@@ -34,7 +35,6 @@ public class UserV1Dto {
 		}
 	}
 
-
 	public record RegisterUserRequest(
 			@Pattern(regexp = "^[a-zA-Z0-9]{1,10}$")
 			String userId,
@@ -46,6 +46,14 @@ public class UserV1Dto {
 			String birth,
 			@Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
 			String email
+	) {
+
+	}
+
+
+	public record ChargePointRequest(
+			@Min(value = 1, message = "포인트는 1 이상이어야 합니다.")
+			int amount
 	) {
 
 	}
