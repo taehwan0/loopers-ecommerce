@@ -18,4 +18,10 @@ public interface UserV1ApiSpec {
 			description = "ID로 사용자를 조회합니다."
 	)
 	ApiResponse<UserV1Dto.UserResponse> getUser(Long id);
+
+	@Operation(
+			summary = "회원 포인트 조회",
+			description = "사용자ID로 사용자 포인트를 조회합니다."
+	)
+	ApiResponse<UserV1Dto.UserPointResponse> getUserPoint(Long id);
 }

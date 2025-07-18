@@ -35,4 +35,11 @@ public class UserFacade {
 				.map(UserInfo::from)
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[id = " + id + "] 사용자를 찾을 수 없습니다."));
 	}
+
+	@Transactional(readOnly = true)
+	public PointInfo getUserPoint(Long id) {
+		return userService.getUser(id)
+				.map(user -> PointInfo.from(user.getPoint()))
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[id = " + id + "] 사용자를 찾을 수 없습니다."));
+	}
 }
