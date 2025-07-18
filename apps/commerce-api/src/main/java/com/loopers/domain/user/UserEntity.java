@@ -2,6 +2,7 @@ package com.loopers.domain.user;
 
 import com.loopers.domain.BaseEntity;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
@@ -20,6 +21,8 @@ public class UserEntity extends BaseEntity {
 	private Gender gender;
 	private LocalDate birth;
 	private String email;
+	@Embedded
+	private Point point;
 
 	public UserEntity(String userId, String name, Gender gender, String birth, String email) {
 		UserValidator.validateBeforeCreateUser(userId, birth, email);
@@ -29,5 +32,6 @@ public class UserEntity extends BaseEntity {
 		this.gender = gender;
 		this.birth = LocalDate.parse(birth);
 		this.email = email;
+		this.point = new Point(0);
 	}
 }
