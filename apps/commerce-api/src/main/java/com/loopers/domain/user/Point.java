@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 @Embeddable
 public class Point {
-	@Column(name = "pointValue", nullable = false)
+	@Column(name = "point_value", nullable = false)
 	private int pointValue;
 
 	protected Point() {}
