@@ -17,7 +17,7 @@ class UserEntityTest {
 	@Nested
 	class Create {
 
-		@DisplayName("ID 가 영문 및 숫자 10자 이내 형식에 맞지 않으면, User 객체 생성에 실패한다.")
+		@DisplayName("ID 가 영문 및 숫자 10자 이내 형식에 맞지 않으면, CoreException(BAD_REQUEST)에러가 발생해 User 객체 생성에 실패한다.")
 		@ParameterizedTest
 		@ValueSource(strings = {
 				"", // 최소 글자수를 만족하지 않는 경우
@@ -25,7 +25,7 @@ class UserEntityTest {
 				"홍길동", // 한글이 포함되는 경우
 				"USER@example", // 특수문자가 포함되는 경우
 		})
-		void fail_whenUserIdIsInvalid(String userId) {
+		void failWithBadRequest_whenUserIdIsInvalid(String userId) {
 			// arrange
 			final String name = "홍길동";
 			final Gender gender = Gender.M;
@@ -42,7 +42,7 @@ class UserEntityTest {
 			assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
 		}
 
-		@DisplayName("이메일 형식이 xx@yy.zz 형식에 맞지 않으면, User 객체 생성에 실패한다.")
+		@DisplayName("이메일 형식이 xx@yy.zz 형식에 맞지 않으면, CoreException(BAD_REQUEST) 에러가 발생해 User 객체 생성에 실패한다.")
 		@ParameterizedTest
 		@ValueSource(strings = {
 				"",
@@ -54,7 +54,7 @@ class UserEntityTest {
 				"foo@example.c",
 				"fo o@example.com",
 		})
-		void fail_whenUserEmailIsInvalid(String email) {
+		void failWithBadRequest_whenUserEmailIsInvalid(String email) {
 			// arrange
 			final String userId = "user123456";
 			final String name = "홍길동";
@@ -71,7 +71,7 @@ class UserEntityTest {
 			assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
 		}
 
-		@DisplayName("생년월일 형식이 yyyy-MM-dd 형식에 맞지 않으면, User 객체 생성에 실패한다.")
+		@DisplayName("생년월일 형식이 yyyy-MM-dd 형식에 맞지 않으면, CoreException(BAD_REQUEST) 에러가 발생해 User 객체 생성에 실패한다.")
 		@ParameterizedTest
 		@ValueSource(strings = {
 				"",
@@ -81,7 +81,7 @@ class UserEntityTest {
 				"2025-3-5",
 				"2025.03.05"
 		})
-		void fail_whenUserBirthIsInvalid(String birth) {
+		void failWithBadRequest_whenUserBirthIsInvalid(String birth) {
 			// arrange
 			final String userId = "user123456";
 			final String name = "홍길동";
@@ -125,7 +125,7 @@ class UserEntityTest {
 		@DisplayName("0이하의 포인트를 충전하려고 하면, 400 Bad Request 에러가 발생한다.")
 		@ParameterizedTest
 		@ValueSource(ints = {Integer.MIN_VALUE, -100, -1, 0})
-		void fail_whenPointValueIsZeroOrNegative(int pointValue) {
+		void failWithBadRequest_whenPointValueIsZeroOrNegative(int pointValue) {
 			// arrange
 			final String userId = "point02";
 			final String name = "홍길동";

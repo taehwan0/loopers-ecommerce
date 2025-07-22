@@ -74,9 +74,9 @@ class UserIntegrationTest {
 			);
 		}
 
-		@DisplayName("중복된 userId로 가입을 시도하면 실패한다.")
+		@DisplayName("중복된 userId로 가입을 시도하면 CoreException(CONFLICT) 에러가 발생해 회원가입에 실패한다.")
 		@Test
-		void fail_whenUserIdIsDuplicated() {
+		void failWithConflict_whenUserIdIsDuplicated() {
 			// arrange
 			String userId = "user01";
 			String name = "홍길동";
@@ -93,7 +93,7 @@ class UserIntegrationTest {
 			assertThat(exception.getErrorType()).isEqualTo(ErrorType.CONFLICT);
 		}
 
-		@DisplayName("ID 가 영문 및 숫자 10자 이내 형식에 맞지 않으면, 회원가입에 실패한다.")
+		@DisplayName("ID 가 영문 및 숫자 10자 이내 형식에 맞지 않으면, CoreException(BAD_REQUEST) 에러가 발생해 회원가입에 실패한다.")
 		@ParameterizedTest
 		@ValueSource(strings = {
 				"", // 최소 글자수를 만족하지 않는 경우
@@ -101,7 +101,7 @@ class UserIntegrationTest {
 				"홍길동", // 한글이 포함되는 경우
 				"USER@example", // 특수문자가 포함되는 경우
 		})
-		void fail_whenUserIdIsInvalid(String userId) {
+		void failWithBadRequest_whenUserIdIsInvalid(String userId) {
 			// arrange
 			final String name = "홍길동";
 			final String gender = "M";
@@ -118,7 +118,7 @@ class UserIntegrationTest {
 			assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
 		}
 
-		@DisplayName("이메일 형식이 xx@yy.zz 형식에 맞지 않으면, 회원가입에 실패한다.")
+		@DisplayName("이메일 형식이 xx@yy.zz 형식에 맞지 않으면, CoreException(BAD_REQUEST) 에러가 발생해 회원가입에 실패한다.")
 		@ParameterizedTest
 		@ValueSource(strings = {
 				"",
@@ -130,7 +130,7 @@ class UserIntegrationTest {
 				"foo@example.c",
 				"fo o@example.com",
 		})
-		void fail_whenUserEmailIsInvalid(String email) {
+		void failWithBadRequest_whenUserEmailIsInvalid(String email) {
 			// arrange
 			final String userId = "user123456";
 			final String name = "홍길동";
@@ -147,7 +147,7 @@ class UserIntegrationTest {
 			assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
 		}
 
-		@DisplayName("생년월일 형식이 yyyy-MM-dd 형식에 맞지 않으면, 회원가입에 실패한다.")
+		@DisplayName("생년월일 형식이 yyyy-MM-dd 형식에 맞지 않으면, CoreException(BAD_REQUEST) 에러가 발생해 회원가입에 실패한다.")
 		@ParameterizedTest
 		@ValueSource(strings = {
 				"",
@@ -157,7 +157,7 @@ class UserIntegrationTest {
 				"2025-3-5",
 				"2025.03.05"
 		})
-		void fail_whenUserBirthIsInvalid(String birth) {
+		void failWithBadReqeust_whenUserBirthIsInvalid(String birth) {
 			// arrange
 			final String userId = "user123456";
 			final String name = "홍길동";
@@ -244,9 +244,9 @@ class UserIntegrationTest {
 	@Nested
 	class ChargePoint {
 
-		@DisplayName("존재하지 않는 사용자에 포인트를 충전하면 실패한다.")
+		@DisplayName("존재하지 않는 사용자에 포인트를 충전하면, CoreException(NOT_FOUND) 에러가 발생한다.")
 		@Test
-		void fail_whenUserIsNotFound() {
+		void failWithNotFound_whenUserIsNotFound() {
 			// arrange
 			String userId = "notfound";
 			int amount = 1000;
