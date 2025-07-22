@@ -2,6 +2,7 @@ package com.loopers.application.user;
 
 
 import com.loopers.domain.user.Gender;
+import com.loopers.domain.user.Point;
 import com.loopers.domain.user.UserEntity;
 import com.loopers.domain.user.UserService;
 import com.loopers.domain.user.UserValidator;
@@ -37,19 +38,24 @@ public class UserFacade {
 	}
 
 	@Transactional(readOnly = true)
-	public PointInfo getUserPoint(Long id) {
-		return userService.getUser(id)
-				.map(user -> PointInfo.from(user.getPoint()))
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[id = " + id + "] 사용자를 찾을 수 없습니다."));
+	public PointInfo getUserPoint(String userId) {
+		UserEntity user = userService.findByUerId(userId)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[id = " + userId + "] 사용자를 찾을 수 없습니다."));
+
+		Point point = user.getPoint();
+
+		return PointInfo.from(point);
 	}
 
 	@Transactional
 	public PointInfo chargePoint(String userId, int amount) {
-		return userService.findByUerId(userId)
-				.map(user -> {
-					user.chargePoint(amount);
-					return PointInfo.from(user.getPoint());
-				})
+		UserEntity userEntity = userService.findByUerId(userId)
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[userId = " + userId + "] 사용자를 찾을 수 없습니다."));
+
+		userEntity.chargePoint(amount);
+
+		Point point = userEntity.getPoint();
+
+		return PointInfo.from(point);
 	}
 }

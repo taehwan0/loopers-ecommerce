@@ -23,7 +23,7 @@ public interface UserV1ApiSpec {
 			summary = "회원 포인트 조회",
 			description = "사용자ID로 사용자 포인트를 조회합니다."
 	)
-	ApiResponse<UserV1Dto.UserPointResponse> getUserPoint(Long id);
+	ApiResponse<UserV1Dto.UserPointResponse> getUserPoint(String userId);
 
 	@Operation(
 			summary = "회원 포인트 충전",

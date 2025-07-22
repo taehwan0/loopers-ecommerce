@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UserV1Controller implements UserV1ApiSpec {
 
+	public static final String X_USER_ID_HEADER = "X-USER-ID";
 	private final UserFacade userFacade;
 
 	@PostMapping("")
@@ -49,18 +50,18 @@ public class UserV1Controller implements UserV1ApiSpec {
 
 	@Override
 	@RequireUserId
-	@GetMapping("/{id}/points")
+	@GetMapping("/points")
 	public ApiResponse<UserPointResponse> getUserPoint(
-			@PathVariable Long id
+			@RequestHeader(X_USER_ID_HEADER) String userId
 	) {
-		return ApiResponse.success(UserPointResponse.from(userFacade.getUserPoint(id)));
+		return ApiResponse.success(UserPointResponse.from(userFacade.getUserPoint(userId)));
 	}
 
 	@Override
 	@RequireUserId
-	@PostMapping("/me/points")
+	@PostMapping("/points")
 	public ApiResponse<UserPointResponse> getUserPoint(
-			@RequestHeader("X-USER-ID") String userId,
+			@RequestHeader(X_USER_ID_HEADER) String userId,
 			@RequestBody ChargePointRequest request
 	) {
 		return ApiResponse.success(UserPointResponse.from(userFacade.chargePoint(userId, request.amount())));

@@ -217,7 +217,7 @@ class UserIntegrationTest {
 			UserInfo userInfo = userFacade.register("getPoint", "홍길동", "M", "2020-01-01", "foo@example.com");
 
 			// act
-			PointInfo pointInfo = userFacade.getUserPoint(userInfo.id());
+			PointInfo pointInfo = userFacade.getUserPoint(userInfo.userId());
 
 			// assert
 			assertAll(

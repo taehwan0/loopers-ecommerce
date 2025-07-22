@@ -292,11 +292,11 @@ class UserV1ApiE2ETest {
 		}
 	}
 
-	@DisplayName("GET /api/v1/users/{userId}/points")
+	@DisplayName("GET /api/v1/users/points")
 	@Nested
 	class GetUserPoints {
 
-		static final Function<Long, String> ENDPOINT_GET_POINTS = id -> "/api/v1/users/" + id + "/points";
+		static final String ENDPOINT_GET_POINTS = "/api/v1/users/points";
 		static final String X_USER_ID_HEADER = "X-USER-ID";
 
 		@DisplayName("X-USER-ID 헤더가 없으면, 400 Bad Request 에러가 발생한다.")
@@ -308,7 +308,7 @@ class UserV1ApiE2ETest {
 			// act
 			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
 			};
-			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS.apply(userId), HttpMethod.GET, null, responseType);
+			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS, HttpMethod.GET, null, responseType);
 
 			// assert
 			assertAll(
@@ -322,15 +322,14 @@ class UserV1ApiE2ETest {
 		@Test
 		void returnNotFound_whenUserNotExists() {
 			// arrange
-			UserInfo adminInfo = userFacade.register("admin", "관리자", "M", "1990-01-01", "foo@example.com");
-			Long userId = -999L; // 정상적인 방법으로는 부여되지 않는 ID로 존재하지 않음을 검증한다.
+			String unknownUserId = "unknown";
 			HttpHeaders httpHeaders = new HttpHeaders();
-			httpHeaders.set(X_USER_ID_HEADER, adminInfo.userId());
+			httpHeaders.set(X_USER_ID_HEADER, unknownUserId);
 
 			// act
 			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
 			};
-			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS.apply(userId), HttpMethod.GET, new HttpEntity<>(httpHeaders), responseType);
+			ResponseEntity<ApiResponse<UserV1Dto.UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS, HttpMethod.GET, new HttpEntity<>(httpHeaders), responseType);
 
 			// assert
 			assertAll(
@@ -352,7 +351,7 @@ class UserV1ApiE2ETest {
 			// act
 			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
 			};
-			ResponseEntity<ApiResponse<UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS.apply(userId), HttpMethod.GET, new HttpEntity<>(httpHeaders), responseType);
+			ResponseEntity<ApiResponse<UserPointResponse>> response = testRestTemplate.exchange(ENDPOINT_GET_POINTS, HttpMethod.GET, new HttpEntity<>(httpHeaders), responseType);
 
 			// assert
 			assertAll(
@@ -363,11 +362,11 @@ class UserV1ApiE2ETest {
 		}
 	}
 
-	@DisplayName("POST /api/v1/users/{userId}/points")
+	@DisplayName("POST /api/v1/users/points")
 	@Nested
 	class ChargeUserPoints {
 
-		static final String ENDPOINT_CHARGE_POINTS = "/api/v1/users/me/points";
+		static final String ENDPOINT_CHARGE_POINTS = "/api/v1/users/points";
 		static final String X_USER_ID_HEADER = "X-USER-ID";
 
 		@DisplayName("X-USER-ID 헤더가 없으면, 400 Bad Request 에러가 발생한다.")
