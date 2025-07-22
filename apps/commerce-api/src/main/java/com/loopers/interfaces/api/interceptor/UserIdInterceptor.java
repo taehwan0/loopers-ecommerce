@@ -1,4 +1,4 @@
-package com.loopers.infrastructure.interceptor;
+package com.loopers.interfaces.api.interceptor;
 
 import com.loopers.support.RequireUserId;
 import com.loopers.support.error.CoreException;

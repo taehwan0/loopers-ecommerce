@@ -1,6 +1,6 @@
-package com.loopers.infrastructure.config;
+package com.loopers.config;
 
-import com.loopers.infrastructure.interceptor.UserIdInterceptor;
+import com.loopers.interfaces.api.interceptor.UserIdInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
