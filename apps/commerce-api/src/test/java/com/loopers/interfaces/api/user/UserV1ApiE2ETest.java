@@ -3,8 +3,9 @@ package com.loopers.interfaces.api.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-import com.loopers.application.user.UserFacade;
-import com.loopers.application.user.UserInfo;
+import com.loopers.domain.user.Gender;
+import com.loopers.domain.user.UserEntity;
+import com.loopers.infrastructure.user.UserJpaRepository;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.interfaces.api.user.UserV1Dto.ChargePointRequest;
 import com.loopers.interfaces.api.user.UserV1Dto.RegisterUserRequest;
@@ -13,6 +14,7 @@ import com.loopers.interfaces.api.user.UserV1Dto.UserResponse;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
 import java.util.function.Function;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,21 +34,26 @@ import org.springframework.http.ResponseEntity;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UserV1ApiE2ETest {
 
-	private static final String REGISTERED_USER_ID = "registered";
+	private static final String REGISTERED_USER_ID = "ADMIN";
 
 	@Autowired
 	private TestRestTemplate testRestTemplate;
 
 	@Autowired
-	private UserFacade userFacade;
-
-	@Autowired
 	private DatabaseCleanUp databaseCleanUp;
 
+	@Autowired
+	private UserJpaRepository userJpaRepository;
+
 	@BeforeEach
+	void setUp() {
+		UserEntity adminUserEntity = new UserEntity(REGISTERED_USER_ID, "관리자", Gender.M, "1990-01-01", "foo@example.com");
+		userJpaRepository.save(adminUserEntity);
+	}
+
+	@AfterEach
 	void cleanUp() {
 		databaseCleanUp.truncateAllTables();
-		userFacade.register(REGISTERED_USER_ID, "foo", "M", "1990-01-01", "foo@example.com");
 	}
 
 	@DisplayName("POST /api/v1/users")
@@ -343,10 +350,8 @@ class UserV1ApiE2ETest {
 		@Test
 		void returnUserPoints_whenUserExists() {
 			// arrange
-			UserInfo adminInfo = userFacade.register("admin", "관리자", "M", "1990-01-01", "foo@example.com");
-			Long userId = adminInfo.id();
 			HttpHeaders httpHeaders = new HttpHeaders();
-			httpHeaders.set(X_USER_ID_HEADER, adminInfo.userId());
+			httpHeaders.set(X_USER_ID_HEADER, REGISTERED_USER_ID);
 
 			// act
 			ParameterizedTypeReference<ApiResponse<UserV1Dto.UserPointResponse>> responseType = new ParameterizedTypeReference<>() {
