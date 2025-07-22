@@ -22,12 +22,16 @@ public class UserFacade {
 	public UserInfo register(String userId, String name, String gender, String birth, String email) {
 		UserValidator.validateBeforeCreateUser(userId, birth, email);
 
-		if (userService.findByUerId(userId).isEmpty()) {
-			UserEntity userEntity = userService.create(userId, name, Gender.of(gender), birth, email);
-			return UserInfo.from(userEntity);
+		if (isExistUserId(userId)) {
+			throw new CoreException(ErrorType.CONFLICT, "이미 사용중인 ID 입니다.");
 		}
 
-		throw new CoreException(ErrorType.CONFLICT, "이미 사용중인 ID 입니다.");
+		UserEntity userEntity = userService.create(userId, name, Gender.of(gender), birth, email);
+		return UserInfo.from(userEntity);
+	}
+
+	private boolean isExistUserId(String userId) {
+		return userService.findByUerId(userId).isPresent();
 	}
 
 	@Transactional(readOnly = true)
