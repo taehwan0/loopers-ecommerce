@@ -26,7 +26,7 @@ public class LikeEntityTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> LikeEntity.createProductLike(null, likeTarget)
+					() -> LikeEntity.of(null, likeTarget)
 			);
 
 			// assert
@@ -45,7 +45,7 @@ public class LikeEntityTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> LikeEntity.createProductLike(userId, null)
+					() -> LikeEntity.of(userId, null)
 			);
 
 			// assert
@@ -63,7 +63,7 @@ public class LikeEntityTest {
 			final Long productId = 2L;
 
 			// act
-			LikeEntity productLike = LikeEntity.createProductLike(userId, LikeTarget.of(productId, LikeTargetType.PRODUCT));
+			LikeEntity productLike = LikeEntity.of(userId, LikeTarget.of(productId, LikeTargetType.PRODUCT));
 
 			// assert
 			assertAll(

@@ -36,7 +36,7 @@ public class LikeEntity extends BaseEntity {
 		this.likeTarget = likeTarget;
 	}
 
-	public static LikeEntity createProductLike(Long userId, LikeTarget likeTarget) {
+	public static LikeEntity of(Long userId, LikeTarget likeTarget) {
 		return new LikeEntity(userId, likeTarget);
 	}
 }

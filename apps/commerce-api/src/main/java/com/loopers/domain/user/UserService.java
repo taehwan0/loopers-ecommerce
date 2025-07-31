@@ -15,7 +15,7 @@ public class UserService {
 	}
 
 	public UserEntity create(String userId, String name, Gender gender, String birth, String email) {
-		UserEntity userEntity = new UserEntity(userId, name, gender, birth, email);
+		UserEntity userEntity = UserEntity.of(userId, name, gender, birth, email);
 		return userRepository.save(userEntity);
 	}
 

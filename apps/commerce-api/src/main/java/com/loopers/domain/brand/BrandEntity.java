@@ -20,7 +20,7 @@ public class BrandEntity extends BaseEntity {
 	@Column(name = "description")
 	private String description;
 
-	public BrandEntity(String name, String description) {
+	private BrandEntity(String name, String description) {
 		if (name == null || name.isBlank()) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "brand의 이름은 비어있을 수 없습니다.");
 		}
@@ -32,5 +32,9 @@ public class BrandEntity extends BaseEntity {
 
 		this.name = name;
 		this.description = description != null ? description.trim() : null;
+	}
+
+	public static BrandEntity of(String name, String description) {
+		return new BrandEntity(name, description);
 	}
 }

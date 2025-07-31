@@ -64,7 +64,7 @@ class BrandV1ApiE2ETest {
 		@Test
 		void returnBrandInfo_whenBrandIsExists() {
 			// arrange
-			BrandEntity brandEntity = brandJpaRepository.save(new BrandEntity("NIKE", null));
+			BrandEntity brandEntity = brandJpaRepository.save(BrandEntity.of("NIKE", null));
 
 			Long brandId = brandEntity.getId();
 			String endpoint = ENDPOINT_GET.apply(brandId);

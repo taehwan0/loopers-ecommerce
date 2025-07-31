@@ -35,7 +35,7 @@ class UserEntityTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> new UserEntity(userId, name, gender, birth, email)
+					() -> UserEntity.of(userId, name, gender, birth, email)
 			);
 
 			// assert
@@ -64,7 +64,7 @@ class UserEntityTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> new UserEntity(userId, name, gender, birth, email)
+					() -> UserEntity.of(userId, name, gender, birth, email)
 			);
 
 			// assert
@@ -91,7 +91,7 @@ class UserEntityTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> new UserEntity(userId, name, gender, birth, email)
+					() -> UserEntity.of(userId, name, gender, birth, email)
 			);
 
 			// assert
@@ -112,7 +112,7 @@ class UserEntityTest {
 			final Gender gender = Gender.M;
 			final String birth = "1990-01-01";
 			final String email = "foo@example.com";
-			UserEntity userEntity = new UserEntity(userId, name, gender, birth, email);
+			UserEntity userEntity = UserEntity.of(userId, name, gender, birth, email);
 			int currentPointValue = userEntity.getPoint().getPointValue();
 
 			// act
@@ -132,7 +132,7 @@ class UserEntityTest {
 			final Gender gender = Gender.M;
 			final String birth = "1990-01-01";
 			final String email = "foo@example.com";
-			UserEntity userEntity = new UserEntity(userId, name, gender, birth, email);
+			UserEntity userEntity = UserEntity.of(userId, name, gender, birth, email);
 
 			// act
 			CoreException exception = assertThrows(

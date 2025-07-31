@@ -11,7 +11,7 @@ public class LikeService {
 
 	public void likeProduct(Long userId, Long productId) {
 		if (likeRepository.findByUserIdAndProductId(userId, productId).isEmpty()) {
-			likeRepository.save(LikeEntity.createProductLike(userId, LikeTarget.of(productId, LikeTargetType.PRODUCT)));
+			likeRepository.save(LikeEntity.of(userId, LikeTarget.of(productId, LikeTargetType.PRODUCT)));
 		}
 	}
 

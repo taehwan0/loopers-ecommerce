@@ -47,7 +47,7 @@ class UserV1ApiE2ETest {
 
 	@BeforeEach
 	void setUp() {
-		UserEntity adminUserEntity = new UserEntity(REGISTERED_USER_ID, "관리자", Gender.M, "1990-01-01", "foo@example.com");
+		UserEntity adminUserEntity = UserEntity.of(REGISTERED_USER_ID, "관리자", Gender.M, "1990-01-01", "foo@example.com");
 		userJpaRepository.save(adminUserEntity);
 	}
 

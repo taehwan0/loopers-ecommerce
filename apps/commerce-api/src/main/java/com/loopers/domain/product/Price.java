@@ -13,17 +13,17 @@ import lombok.NoArgsConstructor;
 @Embeddable
 public class Price {
 	@Column(name = "price_amount", nullable = false)
-	long amount;
+	private long amount;
 
 	private Price(long amount) {
-		this.amount = amount;
-	}
-
-	public static Price of(long amount) {
 		if (amount < 0) {
 			throw new CoreException(ErrorType.INTERNAL_ERROR, "가격은 음수가 될 수 없습니다.");
 		}
 
+		this.amount = amount;
+	}
+
+	public static Price of(long amount) {
 		return new Price(amount);
 	}
 }

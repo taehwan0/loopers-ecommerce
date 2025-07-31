@@ -28,7 +28,7 @@ public class ProductEntity extends BaseEntity {
 	@Embedded
 	private Stock stock;
 
-	public ProductEntity(String name, Long brandId, Price price, Stock stock) {
+	private ProductEntity(String name, Long brandId, Price price, Stock stock) {
 		// TODO: 상품 이름에 대한 규칙을 정해주기
 		if (name == null || name.isBlank()) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "상품의 이름은 비어있을 수 없습니다.");
@@ -50,5 +50,9 @@ public class ProductEntity extends BaseEntity {
 		this.brandId = brandId;
 		this.price = price;
 		this.stock = stock;
+	}
+
+	public static ProductEntity of(String name, Long brandId, Price price, Stock stock) {
+		return new ProductEntity(name, brandId, price, stock);
 	}
 }

@@ -28,7 +28,7 @@ public class BrandEntityTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> new BrandEntity(name, description)
+					() -> BrandEntity.of(name, description)
 			);
 
 			// assert
@@ -48,7 +48,7 @@ public class BrandEntityTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> new BrandEntity(name, description)
+					() -> BrandEntity.of(name, description)
 			);
 
 			// assert
@@ -67,7 +67,7 @@ public class BrandEntityTest {
 			final String description = "description";
 
 			// act
-			BrandEntity brandEntity = new BrandEntity(name, description);
+			BrandEntity brandEntity = BrandEntity.of(name, description);
 
 			// assert
 			assertAll(

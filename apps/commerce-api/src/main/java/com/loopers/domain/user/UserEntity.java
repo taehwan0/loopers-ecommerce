@@ -31,7 +31,7 @@ public class UserEntity extends BaseEntity {
 	@Embedded
 	private Point point;
 
-	public UserEntity(String userId, String name, Gender gender, String birth, String email) {
+	private UserEntity(String userId, String name, Gender gender, String birth, String email) {
 		UserValidator.validateBeforeCreateUser(userId, birth, email);
 
 		this.userId = userId;
@@ -39,7 +39,11 @@ public class UserEntity extends BaseEntity {
 		this.gender = gender;
 		this.birth = LocalDate.parse(birth);
 		this.email = email;
-		this.point = new Point(0);
+		this.point = Point.of(0);
+	}
+
+	public static UserEntity of(String userId, String name, Gender gender, String birth, String email) {
+		return new UserEntity(userId, name, gender, birth, email);
 	}
 
 	public void chargePoint(int pointValue) {

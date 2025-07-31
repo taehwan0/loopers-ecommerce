@@ -8,22 +8,22 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Embeddable
 public class Stock {
 	@Column(name = "quantity", nullable = false)
 	private int quantity;
 
 	private Stock(int quantity) {
+		if (quantity < 0) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "재고는 음수가 될 수 없습니다.");
+		}
+
 		this.quantity = quantity;
 	}
 
 	public static Stock of(int quantity) {
-		if (quantity < 0) {
-			throw new CoreException(ErrorType.INTERNAL_ERROR, "재고는 음수가 될 수 없습니다.");
-		}
-
 		return new Stock(quantity);
 	}
 

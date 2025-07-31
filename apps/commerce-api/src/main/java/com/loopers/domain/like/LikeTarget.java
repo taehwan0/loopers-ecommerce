@@ -11,8 +11,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Embeddable
 public class LikeTarget {
 
 	@Column(name = "target_id", nullable = false)

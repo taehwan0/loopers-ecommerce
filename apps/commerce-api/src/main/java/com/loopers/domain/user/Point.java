@@ -5,17 +5,25 @@ import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 @Embeddable
 public class Point {
 	@Column(name = "point_value", nullable = false)
 	private int pointValue;
 
-	protected Point() {}
+	private Point(int pointValue) {
+		if (pointValue < 0) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "포인트는 음수가 될 수 없습니다.");
+		}
 
-	public Point(int pointValue) {
 		this.pointValue = pointValue;
+	}
+
+	public static Point of(int pointValue) {
+		return new Point(pointValue);
 	}
 
 	protected void addPoint(int pointValue) {

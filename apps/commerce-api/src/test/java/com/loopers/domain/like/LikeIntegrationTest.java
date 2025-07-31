@@ -59,7 +59,7 @@ class LikeIntegrationTest {
 	BrandJpaRepository brandJpaRepository;
 
 	UserEntity createUser() {
-		return userJpaRepository.save(new UserEntity(
+		return userJpaRepository.save(UserEntity.of(
 				REGISTERED_USER_ID,
 				"ADMIN",
 				Gender.M,
@@ -69,14 +69,16 @@ class LikeIntegrationTest {
 	}
 
 	ProductEntity createProduct() {
-		BrandEntity brand = brandJpaRepository.save(new BrandEntity(REGISTERED_BRAND_NAME, "description"));
+		BrandEntity brand = brandJpaRepository.save(BrandEntity.of(REGISTERED_BRAND_NAME, "description"));
 
-		return productJpaRepository.save(new ProductEntity(
+		ProductEntity product = ProductEntity.of(
 				REGISTERED_PRODUCT_ID,
 				brand.getId(),
 				Price.of(1000L),
 				Stock.of(10)
-		));
+		);
+
+		return productJpaRepository.save(product);
 	}
 
 	@AfterEach
