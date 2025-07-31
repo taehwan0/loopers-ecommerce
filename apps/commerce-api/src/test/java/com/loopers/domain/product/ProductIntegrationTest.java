@@ -11,6 +11,7 @@ import com.loopers.infrastructure.brand.BrandJpaRepository;
 import com.loopers.infrastructure.product.ProductJpaRepository;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,13 +40,14 @@ public class ProductIntegrationTest {
 				REGISTERED_PRODUCT_ID,
 				brand.getId(),
 				Price.of(1000L),
-				Stock.of(10)
+				Stock.of(10),
+				LocalDate.of(2025, 1, 1)
 		);
 
 		return productJpaRepository.save(product);
 	}
 
-	@DisplayName("상품 조회 테스트")
+	@DisplayName("상품 단일 조회 테스트")
 	@Nested
 	class GetProduct {
 

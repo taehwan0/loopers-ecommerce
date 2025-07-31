@@ -7,6 +7,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,10 +29,16 @@ public class ProductEntity extends BaseEntity {
 	@Embedded
 	private Stock stock;
 
-	private ProductEntity(String name, Long brandId, Price price, Stock stock) {
-		// TODO: 상품 이름에 대한 규칙을 정해주기
+	@Column(name = "release_date", nullable = false)
+	private LocalDate releaseDate;
+
+	private ProductEntity(String name, Long brandId, Price price, Stock stock, LocalDate releaseDate) {
 		if (name == null || name.isBlank()) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "상품의 이름은 비어있을 수 없습니다.");
+		}
+
+		if (name.trim().length() > 255) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "상품의 이름은 양끝 공백을 제외하고 255자를 초과할 수 없습니다.");
 		}
 
 		if (brandId == null) {
@@ -46,13 +53,18 @@ public class ProductEntity extends BaseEntity {
 			throw new CoreException(ErrorType.BAD_REQUEST, "상품의 재고는 비어있을 수 없습니다.");
 		}
 
+		if (releaseDate == null) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "상품의 발매일 비어있을 수 없습니다.");
+		}
+
 		this.name = name.trim();
 		this.brandId = brandId;
 		this.price = price;
 		this.stock = stock;
+		this.releaseDate = releaseDate;
 	}
 
-	public static ProductEntity of(String name, Long brandId, Price price, Stock stock) {
-		return new ProductEntity(name, brandId, price, stock);
+	public static ProductEntity of(String name, Long brandId, Price price, Stock stock, LocalDate releaseDate) {
+		return new ProductEntity(name, brandId, price, stock, releaseDate);
 	}
 }

@@ -22,6 +22,7 @@ import com.loopers.infrastructure.user.UserJpaRepository;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
+import java.time.LocalDate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -75,7 +76,8 @@ class LikeIntegrationTest {
 				REGISTERED_PRODUCT_ID,
 				brand.getId(),
 				Price.of(1000L),
-				Stock.of(10)
+				Stock.of(10),
+				LocalDate.of(2025, 1, 1)
 		);
 
 		return productJpaRepository.save(product);
