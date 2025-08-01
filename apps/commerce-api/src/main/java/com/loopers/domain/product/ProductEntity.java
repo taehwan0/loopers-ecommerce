@@ -67,4 +67,8 @@ public class ProductEntity extends BaseEntity {
 	public static ProductEntity of(String name, Long brandId, Price price, Stock stock, LocalDate releaseDate) {
 		return new ProductEntity(name, brandId, price, stock, releaseDate);
 	}
+
+	public void decreaseStock(int quantity) {
+		this.stock.decreaseQuantity(quantity);
+	}
 }

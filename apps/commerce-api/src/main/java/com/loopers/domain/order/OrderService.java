@@ -13,6 +13,10 @@ public class OrderService {
 	private final OrderRepository orderRepository;
 	private final OrderItemRepository orderItemRepository;
 
+	public Optional<OrderEntity> getOrder(Long id) {
+		return orderRepository.findById(id);
+	}
+
 	public Optional<OrderEntity> getOrder(UUID idempotencyKey) {
 		return orderRepository.findByIdempotencyKey(idempotencyKey);
 	}

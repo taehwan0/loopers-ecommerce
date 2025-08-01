@@ -29,7 +29,7 @@ public class UserV1Dto {
 		}
 	}
 
-	public record UserPointResponse(int pointValue) {
+	public record UserPointResponse(long pointValue) {
 		public static UserPointResponse from(PointInfo pointInfo) {
 			return new UserPointResponse(pointInfo.pointValue());
 		}

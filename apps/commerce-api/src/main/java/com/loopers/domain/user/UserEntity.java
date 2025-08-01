@@ -46,7 +46,11 @@ public class UserEntity extends BaseEntity {
 		return new UserEntity(userId, name, gender, birth, email);
 	}
 
-	public void chargePoint(int pointValue) {
+	public void chargePoint(long pointValue) {
 		this.point.addPoint(pointValue);
+	}
+
+	public void debitPoints(long amount) {
+		this.point.debitPoints(amount);
 	}
 }

@@ -14,6 +14,11 @@ public class OrderRepositoryImp implements OrderRepository {
 	private final OrderJpaRepository orderJpaRepository;
 
 	@Override
+	public Optional<OrderEntity> findById(Long id) {
+		return orderJpaRepository.findById(id);
+	}
+
+	@Override
 	public Optional<OrderEntity> findByIdempotencyKey(UUID idempotencyKey) {
 		return orderJpaRepository.findByIdempotencyKey(idempotencyKey);
 	}

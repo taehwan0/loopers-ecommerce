@@ -2,6 +2,7 @@ package com.loopers.domain.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -12,6 +13,7 @@ import com.loopers.application.order.CreateOrderCommand;
 import com.loopers.application.order.CreateOrderCommand.CreateOrderItem;
 import com.loopers.application.order.OrderFacade;
 import com.loopers.application.order.OrderInfo;
+import com.loopers.application.order.PaymentInfo;
 import com.loopers.domain.brand.BrandEntity;
 import com.loopers.domain.product.Price;
 import com.loopers.domain.product.ProductEntity;
@@ -19,6 +21,7 @@ import com.loopers.domain.product.Stock;
 import com.loopers.domain.user.Gender;
 import com.loopers.domain.user.UserEntity;
 import com.loopers.infrastructure.brand.BrandJpaRepository;
+import com.loopers.infrastructure.order.OrderJpaRepository;
 import com.loopers.infrastructure.product.ProductJpaRepository;
 import com.loopers.infrastructure.user.UserJpaRepository;
 import com.loopers.support.error.CoreException;
@@ -28,13 +31,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 class OrderIntegrationTest {
@@ -55,6 +58,9 @@ class OrderIntegrationTest {
 	ProductJpaRepository productJpaRepository;
 
 	@Autowired
+	OrderJpaRepository orderJpaRepository;
+
+	@Autowired
 	DatabaseCleanUp databaseCleanUp;
 
 	@AfterEach
@@ -63,14 +69,16 @@ class OrderIntegrationTest {
 	}
 
 	UserEntity createUser() {
-		return userJpaRepository.save(
-				UserEntity.of(
-						"testUser",
-						"테스트 유저",
-						Gender.F,
-						"1990-01-01",
-						"foo@example.com")
-		);
+		UserEntity user = UserEntity.of(
+				"testUser",
+				"테스트 유저",
+				Gender.F,
+				"1990-01-01",
+				"foo@example.com");
+
+		user.chargePoint(10000L);
+
+		return userJpaRepository.save(user);
 	}
 
 	ProductEntity createProduct() {
@@ -134,7 +142,7 @@ class OrderIntegrationTest {
 			);
 
 			// act
-			CoreException exception = Assertions.assertThrows(
+			CoreException exception = assertThrows(
 					CoreException.class,
 					() -> orderFacade.createOrder(command)
 			);
@@ -164,7 +172,7 @@ class OrderIntegrationTest {
 			);
 
 			// act
-			CoreException exception = Assertions.assertThrows(
+			CoreException exception = assertThrows(
 					CoreException.class,
 					() -> orderFacade.createOrder(command)
 			);
@@ -194,7 +202,7 @@ class OrderIntegrationTest {
 			);
 
 			// act
-			CoreException exception = Assertions.assertThrows(
+			CoreException exception = assertThrows(
 					CoreException.class,
 					() -> orderFacade.createOrder(command)
 			);
@@ -234,6 +242,161 @@ class OrderIntegrationTest {
 					() -> assertThat(firstOrder.id()).isEqualTo(secondOrder.id()),
 					() -> assertThat(firstOrder.orderStatus()).isEqualTo(secondOrder.orderStatus()),
 					() -> verify(orderService, times(1)).createOrder(any(UUID.class), anyLong(), anyList())
+			);
+		}
+	}
+
+	@DisplayName("주문 결제 테스트")
+	@Nested
+	class OrderPayment {
+
+		@DisplayName("주문 포인트 결제를 성공하면, 결제 완료 상태로 변경된다.")
+		@Test
+		void returnWithPaidStatus_whenOrderIsPaidByPoint() {
+			// arrange
+			UserEntity user = createUser();
+			ProductEntity product = createProduct();
+			int quantity = 1;
+
+			CreateOrderCommand command = CreateOrderCommand.of(
+					UUID.randomUUID(),
+					user.getId(),
+					List.of(
+							CreateOrderItem.of(product.getId(), quantity)
+					)
+			);
+
+			OrderInfo order = orderFacade.createOrder(command);
+
+			// act
+			user.chargePoint(10000L);
+			PaymentInfo paymentInfo = orderFacade.payOrderByPoint(user.getId(), order.id());
+
+			// assert
+			assertAll(
+					() -> assertThat(paymentInfo).isNotNull(),
+					() -> assertThat(paymentInfo.order().orderStatus()).isEqualTo(OrderStatus.PAYMENT_CONFIRMED.name())
+			);
+		}
+
+		@Transactional
+		@DisplayName("포인트가 부족하면, Bad Request 에러가 발생해 실패한다.")
+		@Test
+		void failWithBadRequest_whenUserHasInsufficientPoints() {
+			// arrange
+			UserEntity user = createUser();
+			ProductEntity product = createProduct();
+			int quantity = 1;
+
+			CreateOrderCommand command = CreateOrderCommand.of(
+					UUID.randomUUID(),
+					user.getId(),
+					List.of(
+							CreateOrderItem.of(product.getId(), quantity)
+					)
+			);
+
+			OrderInfo order = orderFacade.createOrder(command);
+
+			// act
+			user.debitPoints(user.getPoint().getPointValue()); // 모든 포인트를 사용하여 잔액을 0으로 만듭니다.
+
+			CoreException exception = assertThrows(
+					CoreException.class,
+					() -> orderFacade.payOrderByPoint(user.getId(), order.id())
+			);
+
+			// assert
+			assertAll(
+					() -> assertThat(exception).isNotNull(),
+					() -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST)
+			);
+		}
+
+		@Transactional
+		@DisplayName("주문 ID가 존재하지 않는 경우, Not Found 에러가 발생한다.")
+		@Test
+		void failWithNotFound_whenOrderIdDoesNotExist() {
+			// arrange
+			UserEntity user = createUser();
+			final Long nonExistentOrderId = -1L; // 존재하지 않는 주문 ID
+
+			// act
+			CoreException exception = assertThrows(
+					CoreException.class,
+					() -> orderFacade.payOrderByPoint(user.getId(), nonExistentOrderId)
+			);
+
+			// assert
+			assertAll(
+					() -> assertThat(exception).isNotNull(),
+					() -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.NOT_FOUND)
+			);
+		}
+
+		@Transactional
+		@DisplayName("재고가 부족한 경우, Bad Request 에러가 발생해 실패한다.")
+		@Test
+		void failWithBadRequest_whenProductStockIsInsufficient() {
+			// arrange
+			UserEntity user = createUser();
+			ProductEntity product = createProduct();
+			int quantity = 11; // 재고보다 많은 수량
+
+			CreateOrderCommand command = CreateOrderCommand.of(
+					UUID.randomUUID(),
+					user.getId(),
+					List.of(
+							CreateOrderItem.of(product.getId(), quantity)
+					)
+			);
+
+			OrderInfo order = orderFacade.createOrder(command);
+
+			// act
+			CoreException exception = assertThrows(
+					CoreException.class,
+					() -> orderFacade.payOrderByPoint(user.getId(), order.id())
+			);
+
+			// assert
+			assertAll(
+					() -> assertThat(exception).isNotNull(),
+					() -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST)
+			);
+		}
+
+		@Transactional
+		@DisplayName("주문의 상태가 PENDING이 아닌 경우, Conflict 에러가 발생해 실패한다.")
+		@Test
+		void failWithBadRequest_whenOrderStatusIsNotPending() {
+			// arrange
+			UserEntity user = createUser();
+			ProductEntity product = createProduct();
+			int quantity = 1;
+
+			CreateOrderCommand command = CreateOrderCommand.of(
+					UUID.randomUUID(),
+					user.getId(),
+					List.of(
+							CreateOrderItem.of(product.getId(), quantity)
+					)
+			);
+
+			OrderInfo order = orderFacade.createOrder(command);
+			orderJpaRepository.findById(order.id())
+					.ifPresent(o -> o.updateStatus(OrderStatus.PAYMENT_CONFIRMED));
+
+			// act
+			CoreException exception = assertThrows(
+					CoreException.class,
+					() -> orderFacade.payOrderByPoint(user.getId(), order.id())
+			);
+
+			// assert
+			assertAll(
+					() -> assertThat(exception).isNotNull(),
+					() -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.CONFLICT)
 			);
 		}
 	}

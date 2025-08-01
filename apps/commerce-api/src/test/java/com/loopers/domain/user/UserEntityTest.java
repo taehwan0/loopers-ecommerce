@@ -113,7 +113,7 @@ class UserEntityTest {
 			final String birth = "1990-01-01";
 			final String email = "foo@example.com";
 			UserEntity userEntity = UserEntity.of(userId, name, gender, birth, email);
-			int currentPointValue = userEntity.getPoint().getPointValue();
+			long currentPointValue = userEntity.getPoint().getPointValue();
 
 			// act
 			userEntity.chargePoint(100);

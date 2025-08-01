@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @Embeddable
 public class Point {
 	@Column(name = "point_value", nullable = false)
-	private int pointValue;
+	private long pointValue;
 
-	private Point(int pointValue) {
+	private Point(long pointValue) {
 		if (pointValue < 0) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "포인트는 음수가 될 수 없습니다.");
 		}
@@ -22,14 +22,26 @@ public class Point {
 		this.pointValue = pointValue;
 	}
 
-	public static Point of(int pointValue) {
+	public static Point of(long pointValue) {
 		return new Point(pointValue);
 	}
 
-	protected void addPoint(int pointValue) {
+	protected void addPoint(long pointValue) {
 		if (pointValue <= 0) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "1이상의 포인트만 충전 가능합니다.");
 		}
 		this.pointValue += pointValue;
+	}
+
+	protected void debitPoints(long pointValue) {
+		if (pointValue <= 0) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "1이상의 포인트만 차감 가능합니다.");
+		}
+
+		if (this.pointValue - pointValue < 0) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "포인트는 음수가 될 수 없습니다.");
+		}
+
+		this.pointValue -= pointValue;
 	}
 }
