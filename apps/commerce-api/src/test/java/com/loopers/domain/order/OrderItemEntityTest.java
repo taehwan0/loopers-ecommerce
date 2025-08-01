@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ public class OrderItemEntityTest {
 	@Nested
 	class CreateOrderItem {
 
-		@DisplayName("주문 ID가 비어있다면, Bad Request 에러가 발생해 실패한다.")
+		@DisplayName("주문이 null이라면, Bad Request 에러가 발생해 실패한다.")
 		@Test
 		void failWithBadRequest_whenOrderIdIsNull() {
 			// arrange
@@ -40,13 +41,13 @@ public class OrderItemEntityTest {
 		@Test
 		void failWithBadRequest_whenProductIdIsNull() {
 			// arrange
-			final Long orderId = 1L;
+			OrderEntity order = OrderEntity.of(UUID.randomUUID(), 1L);
 			final int quantity = 2;
 
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> OrderItemEntity.of(orderId, null, quantity)
+					() -> OrderItemEntity.of(order, null, quantity)
 			);
 
 			// assert
@@ -60,14 +61,14 @@ public class OrderItemEntityTest {
 		@Test
 		void failWithBadRequest_whenQuantityIsZeroOrLess() {
 			// arrange
-			final Long orderId = 1L;
+			OrderEntity order = OrderEntity.of(UUID.randomUUID(), 1L);
 			final Long productId = 1L;
 			final int quantity = 0;
 
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> OrderItemEntity.of(orderId, productId, quantity)
+					() -> OrderItemEntity.of(order, productId, quantity)
 			);
 
 			// assert
