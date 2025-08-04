@@ -13,7 +13,6 @@ import com.loopers.application.order.CreateOrderCommand;
 import com.loopers.application.order.CreateOrderCommand.CreateOrderItem;
 import com.loopers.application.order.OrderFacade;
 import com.loopers.application.order.OrderInfo;
-import com.loopers.application.order.PaymentInfo;
 import com.loopers.domain.brand.BrandEntity;
 import com.loopers.domain.product.ProductEntity;
 import com.loopers.domain.product.Stock;
@@ -270,12 +269,12 @@ class OrderIntegrationTest {
 
 			// act
 			user.chargePoint(10000L);
-			PaymentInfo paymentInfo = orderFacade.payOrderByPoint(user.getLoginId(), order.id());
+			OrderInfo orderInfo = orderFacade.payOrderByPoint(user.getLoginId(), order.id());
 
 			// assert
 			assertAll(
-					() -> assertThat(paymentInfo).isNotNull(),
-					() -> assertThat(paymentInfo.order().orderStatus()).isEqualTo(OrderStatus.PAYMENT_CONFIRMED.name())
+					() -> assertThat(orderInfo).isNotNull(),
+					() -> assertThat(orderInfo.orderStatus()).isEqualTo(OrderStatus.PAYMENT_CONFIRMED.name())
 			);
 		}
 
@@ -335,9 +334,9 @@ class OrderIntegrationTest {
 		}
 
 		@Transactional
-		@DisplayName("재고가 부족한 경우, Bad Request 에러가 발생해 실패한다.")
+		@DisplayName("재고가 부족한 경우, 주문이 결제 실패 상태로 변경된다.")
 		@Test
-		void failWithBadRequest_whenProductStockIsInsufficient() {
+		void orderStatusIsPaymentFail_whenNotEnoughProductStock() {
 			// arrange
 			UserEntity user = createUser();
 			ProductEntity product = createProduct();
@@ -354,15 +353,12 @@ class OrderIntegrationTest {
 			OrderInfo order = orderFacade.createOrder(command);
 
 			// act
-			CoreException exception = assertThrows(
-					CoreException.class,
-					() -> orderFacade.payOrderByPoint(user.getLoginId(), order.id())
-			);
+			OrderInfo orderInfo = orderFacade.payOrderByPoint(user.getLoginId(), order.id());
 
 			// assert
 			assertAll(
-					() -> assertThat(exception).isNotNull(),
-					() -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST)
+					() -> assertThat(orderInfo).isNotNull(),
+					() -> assertThat(orderInfo.orderStatus()).isEqualTo(OrderStatus.PAYMENT_FAILED.name())
 			);
 		}
 

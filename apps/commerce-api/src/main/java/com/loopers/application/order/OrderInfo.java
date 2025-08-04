@@ -10,8 +10,8 @@ public record OrderInfo(
 		List<OrderItemInfo> orderItems
 ) {
 
-	public static OrderInfo from(OrderEntity order, List<OrderItemEntity> orderItems) {
-		List<OrderItemInfo> orderItemInfos = orderItems.stream()
+	public static OrderInfo from(OrderEntity order) {
+		List<OrderItemInfo> orderItemInfos = order.getOrderItems().stream()
 				.map(OrderItemInfo::from)
 				.toList();
 

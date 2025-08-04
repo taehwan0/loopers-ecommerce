@@ -1,6 +1,7 @@
 package com.loopers.domain.order;
 
 import com.loopers.domain.BaseEntity;
+import com.loopers.domain.vo.Price;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.persistence.CascadeType;
@@ -58,6 +59,14 @@ public class OrderEntity extends BaseEntity {
 
 	public static OrderEntity of(UUID idempotencyKey, Long userId) {
 		return new OrderEntity(idempotencyKey, userId, OrderStatus.PENDING);
+	}
+
+	public Price getTotalPrice() {
+		Long totalAmount = this.orderItems.stream()
+				.map(item -> item.getTotalPrice().getAmount())
+				.reduce(0L, Long::sum);
+
+		return Price.of(totalAmount);
 	}
 
 	public void updateStatus(OrderStatus orderStatus) {

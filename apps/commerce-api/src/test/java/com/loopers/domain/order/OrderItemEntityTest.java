@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import com.loopers.domain.vo.Price;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.util.UUID;
@@ -23,11 +24,12 @@ public class OrderItemEntityTest {
 			// arrange
 			final Long productId = 1L;
 			final int quantity = 2;
+			final Price price = Price.of(10000L);
 
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> OrderItemEntity.of(null, productId, quantity)
+					() -> OrderItemEntity.of(null, productId, price, quantity)
 			);
 
 			// assert
@@ -43,11 +45,12 @@ public class OrderItemEntityTest {
 			// arrange
 			OrderEntity order = OrderEntity.of(UUID.randomUUID(), 1L);
 			final int quantity = 2;
+			final Price price = Price.of(10000L);
 
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> OrderItemEntity.of(order, null, quantity)
+					() -> OrderItemEntity.of(order, null, price, quantity)
 			);
 
 			// assert
@@ -64,11 +67,12 @@ public class OrderItemEntityTest {
 			OrderEntity order = OrderEntity.of(UUID.randomUUID(), 1L);
 			final Long productId = 1L;
 			final int quantity = 0;
+			final Price price = Price.of(10000L);
 
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> OrderItemEntity.of(order, productId, quantity)
+					() -> OrderItemEntity.of(order, productId, price, quantity)
 			);
 
 			// assert

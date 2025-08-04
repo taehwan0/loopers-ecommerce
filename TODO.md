@@ -1,0 +1,2 @@
+- [ ] User-Point Entity 분리하기
+- [ ] Payment의 방식이 여러 개가 될 수 있도록 수정하기

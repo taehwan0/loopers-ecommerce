@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 public class OrderService {
 
 	private final OrderRepository orderRepository;
-	private final OrderItemRepository orderItemRepository;
 
 	public Optional<OrderEntity> getOrder(Long id) {
 		return orderRepository.findById(id);
@@ -22,12 +21,13 @@ public class OrderService {
 	}
 
 	public OrderEntity createOrder(UUID idempotencyKey, Long userId, List<CreateOrderItemDTO> itemDtos) {
-		OrderEntity order = orderRepository.save(OrderEntity.of(idempotencyKey, userId));
+		OrderEntity order = OrderEntity.of(idempotencyKey, userId);
 
 		List<OrderItemEntity> itemEntities = itemDtos.stream()
 				.map(item -> OrderItemEntity.of(
 								order,
 								item.productId(),
+								item.price(),
 								item.quantity()
 						)
 				)
@@ -35,10 +35,6 @@ public class OrderService {
 
 		order.addItems(itemEntities);
 
-		// TODO: 없어도 동작하나?
-//		orderItemRepository.saveAll(itemEntities);
-
-
-		return order;
+		return orderRepository.save(order);
 	}
 }

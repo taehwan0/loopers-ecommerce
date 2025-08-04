@@ -60,7 +60,7 @@ public class ProductEntity extends BaseEntity {
 
 		this.name = name.trim();
 		this.brandId = brandId;
-		this.price = price;
+		this.price = Price.of(price.getAmount());
 		this.stock = stock;
 		this.releaseDate = releaseDate;
 	}
