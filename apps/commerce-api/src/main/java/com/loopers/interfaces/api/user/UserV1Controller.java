@@ -7,7 +7,7 @@ import com.loopers.interfaces.api.user.UserV1Dto.ChargePointRequest;
 import com.loopers.interfaces.api.user.UserV1Dto.RegisterUserRequest;
 import com.loopers.interfaces.api.user.UserV1Dto.UserPointResponse;
 import com.loopers.interfaces.api.user.UserV1Dto.UserResponse;
-import com.loopers.support.RequireUserId;
+import com.loopers.support.RequireUserLoginId;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +33,7 @@ public class UserV1Controller implements UserV1ApiSpec {
 	) {
 
 		UserInfo userInfo = userFacade.register(
-				request.userId(),
+				request.loginId(),
 				request.name(),
 				request.gender().toString(),
 				request.birth(),
@@ -49,21 +49,21 @@ public class UserV1Controller implements UserV1ApiSpec {
 	}
 
 	@Override
-	@RequireUserId
+	@RequireUserLoginId
 	@GetMapping("/points")
 	public ApiResponse<UserPointResponse> getUserPoint(
-			@RequestHeader(X_USER_ID_HEADER) String userId
+			@RequestHeader(X_USER_ID_HEADER) String loginId
 	) {
-		return ApiResponse.success(UserPointResponse.from(userFacade.getUserPoint(userId)));
+		return ApiResponse.success(UserPointResponse.from(userFacade.getUserPoint(loginId)));
 	}
 
 	@Override
-	@RequireUserId
+	@RequireUserLoginId
 	@PostMapping("/points")
 	public ApiResponse<UserPointResponse> getUserPoint(
-			@RequestHeader(X_USER_ID_HEADER) String userId,
+			@RequestHeader(X_USER_ID_HEADER) String loginId,
 			@RequestBody ChargePointRequest request
 	) {
-		return ApiResponse.success(UserPointResponse.from(userFacade.chargePoint(userId, request.amount())));
+		return ApiResponse.success(UserPointResponse.from(userFacade.chargePoint(loginId, request.amount())));
 	}
 }

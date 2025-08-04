@@ -10,7 +10,7 @@ public class UserV1Dto {
 
 	public record UserResponse(
 			Long id,
-			String userId,
+			String loginId,
 			String name,
 			String gender,
 			String birth,
@@ -20,7 +20,7 @@ public class UserV1Dto {
 		static UserResponse from(UserInfo userInfo) {
 			return new UserResponse(
 					userInfo.id(),
-					userInfo.userId(),
+					userInfo.loginId(),
 					userInfo.name(),
 					userInfo.gender().toString(),
 					userInfo.birth().toString(),
@@ -29,7 +29,7 @@ public class UserV1Dto {
 		}
 	}
 
-	public record UserPointResponse(int pointValue) {
+	public record UserPointResponse(long pointValue) {
 		public static UserPointResponse from(PointInfo pointInfo) {
 			return new UserPointResponse(pointInfo.pointValue());
 		}
@@ -37,7 +37,7 @@ public class UserV1Dto {
 
 	public record RegisterUserRequest(
 			@Pattern(regexp = "^[a-zA-Z0-9]{1,10}$")
-			String userId,
+			String loginId,
 			@NotNull
 			String name,
 			@NotNull

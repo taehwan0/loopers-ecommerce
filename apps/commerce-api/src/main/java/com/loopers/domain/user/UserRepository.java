@@ -6,7 +6,7 @@ public interface UserRepository {
 
 	Optional<UserEntity> findById(Long id);
 
-	Optional<UserEntity> findByUserId(String userId);
+	Optional<UserEntity> findByLoginId(String loginId);
 
 	UserEntity save(UserEntity user);
 }

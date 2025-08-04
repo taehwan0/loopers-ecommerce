@@ -47,7 +47,7 @@ class UserV1ApiE2ETest {
 
 	@BeforeEach
 	void setUp() {
-		UserEntity adminUserEntity = new UserEntity(REGISTERED_USER_ID, "관리자", Gender.M, "1990-01-01", "foo@example.com");
+		UserEntity adminUserEntity = UserEntity.of(REGISTERED_USER_ID, "관리자", Gender.M, "1990-01-01", "foo@example.com");
 		userJpaRepository.save(adminUserEntity);
 	}
 
@@ -83,7 +83,7 @@ class UserV1ApiE2ETest {
 			assertAll(
 					() -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
 					() -> assertThat(response.getBody()).isNotNull(),
-					() -> assertThat(response.getBody().data().userId()).isEqualTo(request.userId()),
+					() -> assertThat(response.getBody().data().loginId()).isEqualTo(request.loginId()),
 					() -> assertThat(response.getBody().data().name()).isEqualTo(request.name()),
 					() -> assertThat(response.getBody().data().gender()).isEqualTo(request.gender()),
 					() -> assertThat(response.getBody().data().birth()).isEqualTo(request.birth()),
@@ -192,10 +192,10 @@ class UserV1ApiE2ETest {
 				"홍길동", // 한글이 포함되는 경우
 				"USER@example", // 특수문자가 포함되는 경우
 		})
-		void returnBadRequest_whenUserIdIsInvalidFormat(String userId) {
+		void returnBadRequest_whenLoginIdIsInvalidFormat(String loginId) {
 			// arrange
 			RegisterUserRequest request = new RegisterUserRequest(
-					userId,
+					loginId,
 					"홍길동",
 					"F",
 					"1990-01-01",

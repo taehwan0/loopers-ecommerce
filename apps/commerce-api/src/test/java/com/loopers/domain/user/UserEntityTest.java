@@ -25,7 +25,7 @@ class UserEntityTest {
 				"홍길동", // 한글이 포함되는 경우
 				"USER@example", // 특수문자가 포함되는 경우
 		})
-		void failWithBadRequest_whenUserIdIsInvalid(String userId) {
+		void failWithBadRequest_whenLoginIdIsInvalid(String loginId) {
 			// arrange
 			final String name = "홍길동";
 			final Gender gender = Gender.M;
@@ -35,7 +35,7 @@ class UserEntityTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> new UserEntity(userId, name, gender, birth, email)
+					() -> UserEntity.of(loginId, name, gender, birth, email)
 			);
 
 			// assert
@@ -56,7 +56,7 @@ class UserEntityTest {
 		})
 		void failWithBadRequest_whenUserEmailIsInvalid(String email) {
 			// arrange
-			final String userId = "user123456";
+			final String loginId = "user123456";
 			final String name = "홍길동";
 			final Gender gender = Gender.M;
 			final String birth = "1990-01-01";
@@ -64,7 +64,7 @@ class UserEntityTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> new UserEntity(userId, name, gender, birth, email)
+					() -> UserEntity.of(loginId, name, gender, birth, email)
 			);
 
 			// assert
@@ -83,7 +83,7 @@ class UserEntityTest {
 		})
 		void failWithBadRequest_whenUserBirthIsInvalid(String birth) {
 			// arrange
-			final String userId = "user123456";
+			final String loginId = "user123456";
 			final String name = "홍길동";
 			final Gender gender = Gender.M;
 			final String email = "foo@example.com";
@@ -91,7 +91,7 @@ class UserEntityTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> new UserEntity(userId, name, gender, birth, email)
+					() -> UserEntity.of(loginId, name, gender, birth, email)
 			);
 
 			// assert
@@ -107,13 +107,13 @@ class UserEntityTest {
 		@Test
 		void chargePoint_whenChargePointSuccess() {
 			// arrange
-			final String userId = "point01";
+			final String loginId = "point01";
 			final String name = "홍길동";
 			final Gender gender = Gender.M;
 			final String birth = "1990-01-01";
 			final String email = "foo@example.com";
-			UserEntity userEntity = new UserEntity(userId, name, gender, birth, email);
-			int currentPointValue = userEntity.getPoint().getPointValue();
+			UserEntity userEntity = UserEntity.of(loginId, name, gender, birth, email);
+			long currentPointValue = userEntity.getPoint().getPointValue();
 
 			// act
 			userEntity.chargePoint(100);
@@ -127,12 +127,12 @@ class UserEntityTest {
 		@ValueSource(ints = {Integer.MIN_VALUE, -100, -1, 0})
 		void failWithBadRequest_whenPointValueIsZeroOrNegative(int pointValue) {
 			// arrange
-			final String userId = "point02";
+			final String loginId = "point02";
 			final String name = "홍길동";
 			final Gender gender = Gender.M;
 			final String birth = "1990-01-01";
 			final String email = "foo@example.com";
-			UserEntity userEntity = new UserEntity(userId, name, gender, birth, email);
+			UserEntity userEntity = UserEntity.of(loginId, name, gender, birth, email);
 
 			// act
 			CoreException exception = assertThrows(

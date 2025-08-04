@@ -52,20 +52,20 @@ class UserIntegrationTest {
 		@Test
 		void returnUserInfo_whenRegisterUserSuccess() {
 			// arrange
-			String userId = "user01";
+			String loginId = "user01";
 			String name = "홍길동";
 			String gender = "M";
 			String birth = "1990-01-01";
 			String email = "foo@example.com";
 
 			// act
-			UserInfo userInfo = userFacade.register(userId, name, gender, birth, email);
+			UserInfo userInfo = userFacade.register(loginId, name, gender, birth, email);
 
 			// assert
 			assertAll(
 					() -> assertThat(userInfo).isNotNull(),
 					() -> assertThat(userInfo.id()).isNotNull(),
-					() -> assertThat(userInfo.userId()).isEqualTo(userId),
+					() -> assertThat(userInfo.loginId()).isEqualTo(loginId),
 					() -> assertThat(userInfo.name()).isEqualTo(name),
 					() -> assertThat(userInfo.gender().toString()).isEqualTo(gender),
 					() -> assertThat(userInfo.birth()).isEqualTo(birth),
@@ -74,26 +74,26 @@ class UserIntegrationTest {
 			);
 		}
 
-		@DisplayName("중복된 userId로 가입을 시도하면 CoreException(CONFLICT) 에러가 발생해 회원가입에 실패한다.")
+		@DisplayName("중복된 loginId로 가입을 시도하면 CoreException(CONFLICT) 에러가 발생해 회원가입에 실패한다.")
 		@Test
-		void failWithConflict_whenUserIdIsDuplicated() {
+		void failWithConflict_whenLoginIdIsDuplicated() {
 			// arrange
-			String userId = "user01";
+			String loginId = "user01";
 			String name = "홍길동";
 			String gender = "M";
 			String birth = "1990-01-01";
 			String email = "foo@example.com";
 
-			userFacade.register(userId, name, gender, birth, email);
+			userFacade.register(loginId, name, gender, birth, email);
 
 			// act
-			CoreException exception = assertThrows(CoreException.class, () -> userFacade.register(userId, name, gender, birth, email));
+			CoreException exception = assertThrows(CoreException.class, () -> userFacade.register(loginId, name, gender, birth, email));
 
 			// assert
 			assertThat(exception.getErrorType()).isEqualTo(ErrorType.CONFLICT);
 		}
 
-		@DisplayName("ID 가 영문 및 숫자 10자 이내 형식에 맞지 않으면, CoreException(BAD_REQUEST) 에러가 발생해 회원가입에 실패한다.")
+		@DisplayName("LoginId가 영문 및 숫자 10자 이내 형식에 맞지 않으면, CoreException(BAD_REQUEST) 에러가 발생해 회원가입에 실패한다.")
 		@ParameterizedTest
 		@ValueSource(strings = {
 				"", // 최소 글자수를 만족하지 않는 경우
@@ -101,7 +101,7 @@ class UserIntegrationTest {
 				"홍길동", // 한글이 포함되는 경우
 				"USER@example", // 특수문자가 포함되는 경우
 		})
-		void failWithBadRequest_whenUserIdIsInvalid(String userId) {
+		void failWithBadRequest_whenLoginIdIsInvalid(String loginId) {
 			// arrange
 			final String name = "홍길동";
 			final String gender = "M";
@@ -111,7 +111,7 @@ class UserIntegrationTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> userFacade.register(userId, name, gender, birth, email)
+					() -> userFacade.register(loginId, name, gender, birth, email)
 			);
 
 			// assert
@@ -132,7 +132,7 @@ class UserIntegrationTest {
 		})
 		void failWithBadRequest_whenUserEmailIsInvalid(String email) {
 			// arrange
-			final String userId = "user123456";
+			final String loginId = "user123456";
 			final String name = "홍길동";
 			final String gender = "M";
 			final String birth = "1990-01-01";
@@ -140,7 +140,7 @@ class UserIntegrationTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> userFacade.register(userId, name, gender, birth, email)
+					() -> userFacade.register(loginId, name, gender, birth, email)
 			);
 
 			// assert
@@ -159,7 +159,7 @@ class UserIntegrationTest {
 		})
 		void failWithBadReqeust_whenUserBirthIsInvalid(String birth) {
 			// arrange
-			final String userId = "user123456";
+			final String loginId = "user123456";
 			final String name = "홍길동";
 			final String gender = "M";
 			final String email = "foo@example.com";
@@ -167,7 +167,7 @@ class UserIntegrationTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> userFacade.register(userId, name, gender, birth, email)
+					() -> userFacade.register(loginId, name, gender, birth, email)
 			);
 
 			// assert
@@ -217,7 +217,7 @@ class UserIntegrationTest {
 			UserInfo userInfo = userFacade.register("getPoint", "홍길동", "M", "2020-01-01", "foo@example.com");
 
 			// act
-			PointInfo pointInfo = userFacade.getUserPoint(userInfo.userId());
+			PointInfo pointInfo = userFacade.getUserPoint(userInfo.loginId());
 
 			// assert
 			assertAll(
@@ -248,13 +248,13 @@ class UserIntegrationTest {
 		@Test
 		void failWithNotFound_whenUserIsNotFound() {
 			// arrange
-			String userId = "notfound";
+			String loginId = "notfound";
 			int amount = 1000;
 
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> userFacade.chargePoint(userId, amount)
+					() -> userFacade.chargePoint(loginId, amount)
 			);
 
 			// assert

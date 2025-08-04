@@ -6,7 +6,7 @@ import java.time.LocalDate;
 
 public record UserInfo(
 		Long id,
-		String userId,
+		String loginId,
 		String name,
 		Gender gender,
 		LocalDate birth,
@@ -16,7 +16,7 @@ public record UserInfo(
 	static UserInfo from(UserEntity entity) {
 		return new UserInfo(
 				entity.getId(),
-				entity.getUserId(),
+				entity.getLoginId(),
 				entity.getName(),
 				entity.getGender(),
 				entity.getBirth(),

@@ -19,19 +19,19 @@ public class UserFacade {
 	private final UserService userService;
 
 	@Transactional
-	public UserInfo register(String userId, String name, String gender, String birth, String email) {
-		UserValidator.validateBeforeCreateUser(userId, birth, email);
+	public UserInfo register(String loginId, String name, String gender, String birth, String email) {
+		UserValidator.validateBeforeCreateUser(loginId, birth, email);
 
-		if (isExistUserId(userId)) {
+		if (isExistLoginId(loginId)) {
 			throw new CoreException(ErrorType.CONFLICT, "이미 사용중인 ID 입니다.");
 		}
 
-		UserEntity userEntity = userService.create(userId, name, Gender.of(gender), birth, email);
+		UserEntity userEntity = userService.create(loginId, name, Gender.of(gender), birth, email);
 		return UserInfo.from(userEntity);
 	}
 
-	private boolean isExistUserId(String userId) {
-		return userService.findByUerId(userId).isPresent();
+	private boolean isExistLoginId(String loginId) {
+		return userService.findByLoginId(loginId).isPresent();
 	}
 
 	@Transactional(readOnly = true)
@@ -42,9 +42,9 @@ public class UserFacade {
 	}
 
 	@Transactional(readOnly = true)
-	public PointInfo getUserPoint(String userId) {
-		UserEntity user = userService.findByUerId(userId)
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[id = " + userId + "] 사용자를 찾을 수 없습니다."));
+	public PointInfo getUserPoint(String loginId) {
+		UserEntity user = userService.findByLoginId(loginId)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + loginId + "] 사용자를 찾을 수 없습니다."));
 
 		Point point = user.getPoint();
 
@@ -52,9 +52,9 @@ public class UserFacade {
 	}
 
 	@Transactional
-	public PointInfo chargePoint(String userId, int amount) {
-		UserEntity userEntity = userService.findByUerId(userId)
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[userId = " + userId + "] 사용자를 찾을 수 없습니다."));
+	public PointInfo chargePoint(String loginId, int amount) {
+		UserEntity userEntity = userService.findByLoginId(loginId)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + loginId + "] 사용자를 찾을 수 없습니다."));
 
 		userEntity.chargePoint(amount);
 
