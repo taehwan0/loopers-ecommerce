@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "brand")
 @Entity
 public class BrandEntity extends BaseEntity {
-	@Column(name = "name", nullable = false, unique = true)
+	@Column(name = "name", nullable = false, unique = true, length = 255)
 	private String name;
 
 	@Column(name = "description")
