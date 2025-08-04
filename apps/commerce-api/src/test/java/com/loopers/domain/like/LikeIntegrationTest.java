@@ -92,13 +92,13 @@ class LikeIntegrationTest {
 	@Nested
 	class ProductLikeTest {
 
-		@DisplayName("상품 Like 등록 시 존재하지 않는 사용자의 ID를 입력한다면, Not Found 에러가 발생한다.")
+		@DisplayName("상품 Like 등록 시 존재하지 않는 사용자의 LoginID를 입력한다면, Not Found 에러가 발생한다.")
 		@Test
 		void failLikeWithNotFound_whenUserIdIsNotExists() {
 			// arrange
-			final Long userId = -999L;
-			final Long productId = 1L;
-			LikeProductCommand likeProductCommand = LikeProductCommand.of(userId, productId);
+			final String loginId = "UNKNOWN";
+			ProductEntity product = createProduct();
+			LikeProductCommand likeProductCommand = LikeProductCommand.of(loginId, product.getId());
 
 			// act
 			CoreException exception = assertThrows(
@@ -117,9 +117,9 @@ class LikeIntegrationTest {
 		@Test
 		void failLikeWithNotFound_whenProductIdIsNotExists() {
 			// arrange
-			final Long userId = 1L;
+			UserEntity user = createUser();
 			final Long productId = -999L;
-			LikeProductCommand likeProductCommand = LikeProductCommand.of(userId, productId);
+			LikeProductCommand likeProductCommand = LikeProductCommand.of(user.getLoginId(), productId);
 
 			// act
 			CoreException exception = assertThrows(
@@ -138,9 +138,9 @@ class LikeIntegrationTest {
 		@Test
 		void failUnlikeWithNotFound_whenUserIdIsNotExists() {
 			// arrange
-			final Long userId = -999L;
-			final Long productId = 1L;
-			LikeProductCommand likeProductCommand = LikeProductCommand.of(userId, productId);
+			final String loginId = "UNKNOWN";
+			ProductEntity product = createProduct();
+			LikeProductCommand likeProductCommand = LikeProductCommand.of(loginId, product.getId());
 
 			// act
 			CoreException exception = assertThrows(
@@ -159,9 +159,9 @@ class LikeIntegrationTest {
 		@Test
 		void failUnlikeWithNotFound_whenProductIdIsNotExists() {
 			// arrange
-			final Long userId = 1L;
+			UserEntity user = createUser();
 			final Long productId = -999L;
-			LikeProductCommand likeProductCommand = LikeProductCommand.of(userId, productId);
+			LikeProductCommand likeProductCommand = LikeProductCommand.of(user.getLoginId(), productId);
 
 			// act
 			CoreException exception = assertThrows(
@@ -182,7 +182,7 @@ class LikeIntegrationTest {
 			// arrange
 			UserEntity user = createUser();
 			ProductEntity product = createProduct();
-			LikeProductCommand likeProductCommand = LikeProductCommand.of(user.getId(), product.getId());
+			LikeProductCommand likeProductCommand = LikeProductCommand.of(user.getLoginId(), product.getId());
 
 			// act
 			likeFacade.likeProduct(likeProductCommand);
@@ -207,7 +207,7 @@ class LikeIntegrationTest {
 			// arrange
 			UserEntity user = createUser();
 			ProductEntity product = createProduct();
-			LikeProductCommand likeProductCommand = LikeProductCommand.of(user.getId(), product.getId());
+			LikeProductCommand likeProductCommand = LikeProductCommand.of(user.getLoginId(), product.getId());
 
 			// act
 			likeFacade.unlikeProduct(likeProductCommand);

@@ -110,7 +110,7 @@ class OrderIntegrationTest {
 
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
-					user.getId(),
+					user.getLoginId(),
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -137,7 +137,7 @@ class OrderIntegrationTest {
 
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
-					user.getId(),
+					user.getLoginId(),
 					List.of()
 			);
 
@@ -159,7 +159,7 @@ class OrderIntegrationTest {
 		void failWithNotFound_whenUserDoesNotExist() {
 			// arrange
 			final UUID idempotencyKey = UUID.randomUUID();
-			final Long nonExistentUserId = -1L; // 존재하지 않는 사용자 ID
+			final String nonExistentUserId = "UNKNOWN"; // 존재하지 않는 사용자 ID
 			ProductEntity product = createProduct();
 			final int quantity = 1;
 
@@ -195,7 +195,7 @@ class OrderIntegrationTest {
 
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
-					user.getId(),
+					user.getLoginId(),
 					List.of(
 							CreateOrderItem.of(nonExistentProductId, quantity)
 					)
@@ -225,7 +225,7 @@ class OrderIntegrationTest {
 
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
-					user.getId(),
+					user.getLoginId(),
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -260,7 +260,7 @@ class OrderIntegrationTest {
 
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
-					user.getId(),
+					user.getLoginId(),
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -270,7 +270,7 @@ class OrderIntegrationTest {
 
 			// act
 			user.chargePoint(10000L);
-			PaymentInfo paymentInfo = orderFacade.payOrderByPoint(user.getId(), order.id());
+			PaymentInfo paymentInfo = orderFacade.payOrderByPoint(user.getLoginId(), order.id());
 
 			// assert
 			assertAll(
@@ -290,7 +290,7 @@ class OrderIntegrationTest {
 
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
-					user.getId(),
+					user.getLoginId(),
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -303,7 +303,7 @@ class OrderIntegrationTest {
 
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> orderFacade.payOrderByPoint(user.getId(), order.id())
+					() -> orderFacade.payOrderByPoint(user.getLoginId(), order.id())
 			);
 
 			// assert
@@ -324,7 +324,7 @@ class OrderIntegrationTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> orderFacade.payOrderByPoint(user.getId(), nonExistentOrderId)
+					() -> orderFacade.payOrderByPoint(user.getLoginId(), nonExistentOrderId)
 			);
 
 			// assert
@@ -345,7 +345,7 @@ class OrderIntegrationTest {
 
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
-					user.getId(),
+					user.getLoginId(),
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -356,7 +356,7 @@ class OrderIntegrationTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> orderFacade.payOrderByPoint(user.getId(), order.id())
+					() -> orderFacade.payOrderByPoint(user.getLoginId(), order.id())
 			);
 
 			// assert
@@ -377,7 +377,7 @@ class OrderIntegrationTest {
 
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
-					user.getId(),
+					user.getLoginId(),
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -390,7 +390,7 @@ class OrderIntegrationTest {
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> orderFacade.payOrderByPoint(user.getId(), order.id())
+					() -> orderFacade.payOrderByPoint(user.getLoginId(), order.id())
 			);
 
 			// assert

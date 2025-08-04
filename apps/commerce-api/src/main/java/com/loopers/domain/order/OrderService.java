@@ -33,9 +33,11 @@ public class OrderService {
 				)
 				.toList();
 
-		orderItemRepository.saveAll(itemEntities);
-
 		order.addItems(itemEntities);
+
+		// TODO: 없어도 동작하나?
+//		orderItemRepository.saveAll(itemEntities);
+
 
 		return order;
 	}

@@ -34,9 +34,8 @@ public class OrderFacade {
 			throw new CoreException(ErrorType.BAD_REQUEST, "주문 항목은 필수 입력값 입니다.");
 		}
 
-		if (userService.getUser(command.userId()).isEmpty()) {
-			throw new CoreException(ErrorType.NOT_FOUND, "[userId = " + command.userId() + "] 사용자를 찾을 수 없습니다.");
-		}
+		UserEntity user = userService.findByLoginId(command.loginId())
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + command.loginId() + "] 사용자를 찾을 수 없습니다."));
 
 		// 이미 생성된 주문의 경우, idempotencyKey를 통해 조회하여 반환
 		Optional<OrderEntity> orderOptional = orderService.getOrder(command.idempotencyKey());
@@ -56,15 +55,15 @@ public class OrderFacade {
 				)
 				.toList();
 
-		OrderEntity order = orderService.createOrder(command.idempotencyKey(), command.userId(), itemDtos);
+		OrderEntity order = orderService.createOrder(command.idempotencyKey(), user.getId(), itemDtos);
 
 		return OrderInfo.from(order, order.getOrderItems());
 	}
 
 	@Transactional
-	public PaymentInfo payOrderByPoint(Long userId, Long orderId) {
-		UserEntity user = userService.getUser(userId)
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[userId = " + userId + "] 사용자를 찾을 수 없습니다."));
+	public PaymentInfo payOrderByPoint(String loginId, Long orderId) {
+		UserEntity user = userService.findByLoginId(loginId)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + loginId + "] 사용자를 찾을 수 없습니다."));
 
 		OrderEntity order = orderService.getOrder(orderId)
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[orderId = " + orderId + "] 주문을 찾을 수 없습니다."));

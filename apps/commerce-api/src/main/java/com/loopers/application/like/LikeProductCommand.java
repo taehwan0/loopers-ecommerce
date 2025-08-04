@@ -4,13 +4,13 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 
 public record LikeProductCommand(
-		Long userId,
+		String loginId,
 		Long productId
 ) {
 
 	public LikeProductCommand {
-		if (userId == null) {
-			throw new CoreException(ErrorType.BAD_REQUEST, "userId 필수 입력값입니다.");
+		if (loginId == null) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "loginId는 필수 입력값입니다.");
 		}
 
 		if (productId == null) {
@@ -18,7 +18,7 @@ public record LikeProductCommand(
 		}
 	}
 
-	public static LikeProductCommand of(Long userId, Long productId) {
-		return new LikeProductCommand(userId, productId);
+	public static LikeProductCommand of(String loginId, Long productId) {
+		return new LikeProductCommand(loginId, productId);
 	}
 }

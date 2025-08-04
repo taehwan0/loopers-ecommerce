@@ -12,9 +12,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class UserValidatorTest {
 
-	@DisplayName("사용자 ID 검증 테스트")
+	@DisplayName("사용자 loginId 검증 테스트")
 	@Nested
-	class UserIdValidation {
+	class UserLoginIdValidation {
 
 		@DisplayName("영문, 숫자 외 다른 문자가 들어간다면, CoreException(BAD_REQUEST) 에러가 발생해 실패한다.")
 		@ParameterizedTest
@@ -25,13 +25,13 @@ class UserValidatorTest {
 				"はい",
 				"田中"
 		})
-		void failWithBadRequest_whenUserIdHasSpecialCharacter(String userId) {
+		void failWithBadRequest_whenLoginIdHasSpecialCharacter(String loginId) {
 			// arrange
 
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> UserValidator.validateUserId(userId)
+					() -> UserValidator.validateLoginId(loginId)
 			);
 
 			// assert
@@ -44,18 +44,18 @@ class UserValidatorTest {
 				"",
 				"01234567890"
 		})
-		void failWithBadRequest_whenUserIdLengthIsInvalid(String userId) {
+		void failWithBadRequest_whenLoginIdLengthIsInvalid(String loginId) {
 			// arrange
 
 			// act
 			CoreException exception = assertThrows(
 					CoreException.class,
-					() -> UserValidator.validateUserId(userId)
+					() -> UserValidator.validateLoginId(loginId)
 			);
 
 			// assert
-			int userIdLength = userId.length();
-			assertThat(userIdLength < 1 || userIdLength > 10).isTrue();
+			int loginIdLength = loginId.length();
+			assertThat(loginIdLength < 1 || loginIdLength > 10).isTrue();
 			assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
 		}
 	}

@@ -17,8 +17,8 @@ import lombok.NoArgsConstructor;
 @Entity
 public class UserEntity extends BaseEntity {
 
-	@Column(name = "member_id", nullable = false, unique = true, updatable = false, length = 10)
-	private String userId;
+	@Column(name = "login_id", nullable = false, unique = true, updatable = false, length = 10)
+	private String loginId;
 	@Column(name = "name", nullable = false)
 	private String name;
 	@Column(name = "gender", nullable = false)
@@ -31,10 +31,10 @@ public class UserEntity extends BaseEntity {
 	@Embedded
 	private Point point;
 
-	private UserEntity(String userId, String name, Gender gender, String birth, String email) {
-		UserValidator.validateBeforeCreateUser(userId, birth, email);
+	private UserEntity(String loginId, String name, Gender gender, String birth, String email) {
+		UserValidator.validateBeforeCreateUser(loginId, birth, email);
 
-		this.userId = userId;
+		this.loginId = loginId;
 		this.name = name;
 		this.gender = gender;
 		this.birth = LocalDate.parse(birth);
@@ -42,8 +42,8 @@ public class UserEntity extends BaseEntity {
 		this.point = Point.of(0);
 	}
 
-	public static UserEntity of(String userId, String name, Gender gender, String birth, String email) {
-		return new UserEntity(userId, name, gender, birth, email);
+	public static UserEntity of(String loginId, String name, Gender gender, String birth, String email) {
+		return new UserEntity(loginId, name, gender, birth, email);
 	}
 
 	public void chargePoint(long pointValue) {

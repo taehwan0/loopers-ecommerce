@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public record CreateOrderCommand(
 		UUID idempotencyKey,
-		Long userId,
+		String loginId,
 		List<CreateOrderItem> items
 ) {
 
@@ -16,8 +16,8 @@ public record CreateOrderCommand(
 			throw new CoreException(ErrorType.BAD_REQUEST, "idempotencyKey 필수 입력값입니다.");
 		}
 
-		if (userId == null) {
-			throw new CoreException(ErrorType.BAD_REQUEST, "userId 필수 입력값입니다.");
+		if (loginId == null) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "loginId 필수 입력값입니다.");
 		}
 
 		if (items == null) {
@@ -25,8 +25,8 @@ public record CreateOrderCommand(
 		}
 	}
 
-	public static CreateOrderCommand of(UUID idempotencyKey, Long userId, List<CreateOrderItem> items) {
-		return new CreateOrderCommand(idempotencyKey, userId, items);
+	public static CreateOrderCommand of(UUID idempotencyKey, String loginId, List<CreateOrderItem> items) {
+		return new CreateOrderCommand(idempotencyKey, loginId, items);
 	}
 
 	public record CreateOrderItem(

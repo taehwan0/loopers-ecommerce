@@ -10,12 +10,12 @@ public class UserService {
 
 	private final UserRepository userRepository;
 
-	public Optional<UserEntity> findByUerId(String userId) {
-		return userRepository.findByUserId(userId);
+	public Optional<UserEntity> findByLoginId(String loginId) {
+		return userRepository.findByLoginId(loginId);
 	}
 
-	public UserEntity create(String userId, String name, Gender gender, String birth, String email) {
-		UserEntity userEntity = UserEntity.of(userId, name, gender, birth, email);
+	public UserEntity create(String loginId, String name, Gender gender, String birth, String email) {
+		UserEntity userEntity = UserEntity.of(loginId, name, gender, birth, email);
 		return userRepository.save(userEntity);
 	}
 
