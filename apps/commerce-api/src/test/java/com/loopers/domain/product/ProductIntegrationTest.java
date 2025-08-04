@@ -14,6 +14,7 @@ import com.loopers.domain.brand.BrandEntity;
 import com.loopers.domain.like.LikeCountEntity;
 import com.loopers.domain.like.LikeTarget;
 import com.loopers.domain.like.LikeTargetType;
+import com.loopers.domain.vo.Price;
 import com.loopers.infrastructure.brand.BrandJpaRepository;
 import com.loopers.infrastructure.like.LikeCountJpaRepository;
 import com.loopers.infrastructure.product.ProductJpaRepository;

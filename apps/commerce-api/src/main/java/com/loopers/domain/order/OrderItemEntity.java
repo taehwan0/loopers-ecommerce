@@ -29,6 +29,7 @@ public class OrderItemEntity extends BaseEntity {
 	@Column(name = "quantity", nullable = false)
 	private int quantity;
 
+
 	private OrderItemEntity(OrderEntity order, Long productId, int quantity) {
 		if (order == null) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "주문은 비어있을 수 없습니다.");

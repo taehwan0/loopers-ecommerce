@@ -1,10 +1,10 @@
 package com.loopers.infrastructure.product;
 
-import com.loopers.domain.product.Price;
 import com.loopers.domain.product.ProductQueryRepository;
 import com.loopers.domain.product.ProductSummary;
 import com.loopers.domain.product.ProductSummary.BrandSummary;
 import com.loopers.domain.product.ProductSummarySort;
+import com.loopers.domain.vo.Price;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.List;
