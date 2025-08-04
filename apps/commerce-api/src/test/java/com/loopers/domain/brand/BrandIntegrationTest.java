@@ -25,7 +25,7 @@ public class BrandIntegrationTest {
 
 		@DisplayName("존재하지 않는 id로 조회한다면, Not Found 에러가 발생한다.")
 		@Test
-		void failWithBadRequest_whenBrandIdIsNotExists() {
+		void failWithNotFound_whenBrandIdIsNotExists() {
 			// arrange
 			Long brandId = -999L;
 
