@@ -44,6 +44,9 @@ public class LikeCountEntity extends BaseEntity {
 	}
 
 	public void decreaseLikeCount() {
+		if (this.likeCount <= 0) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "likeCount가 0보다 작을 수 없습니다.");
+		}
 		this.likeCount--;
 	}
 }
