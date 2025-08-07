@@ -6,6 +6,8 @@ import com.loopers.domain.order.OrderService;
 import com.loopers.domain.order.OrderStatus;
 import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.payment.PaymentService;
+import com.loopers.domain.point.Point;
+import com.loopers.domain.point.PointService;
 import com.loopers.domain.product.ProductEntity;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.UserEntity;
@@ -28,6 +30,7 @@ public class OrderFacade {
 	private final ProductService productService;
 	private final UserService userService;
 	private final PaymentService paymentService;
+	private final PointService pointService;
 
 	@Transactional
 	public OrderInfo createOrder(CreateOrderCommand command) {
@@ -80,8 +83,7 @@ public class OrderFacade {
 		try {
 			order.getOrderItems().forEach(item -> productService.decreaseStock(item.getProductId(), item.getQuantity()));
 
-			// TODO: 포인트 도메인 분리 및 포인트 차감 실패 시 복구 로직 필요?
-			user.debitPoints(totalPrice.getAmount());
+			pointService.deductPoint(user.getId(), Point.of(totalPrice.getAmount()));
 
 			paymentService.save(orderId, PaymentMethod.POINT, totalPrice.getAmount());
 
@@ -89,7 +91,6 @@ public class OrderFacade {
 		} catch (PaymentException e) {
 			order.updateStatus(OrderStatus.PAYMENT_FAILED);
 		}
-
 		return OrderInfo.from(order);
 	}
 }

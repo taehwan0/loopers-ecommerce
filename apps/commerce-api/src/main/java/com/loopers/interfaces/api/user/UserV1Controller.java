@@ -3,18 +3,14 @@ package com.loopers.interfaces.api.user;
 import com.loopers.application.user.UserFacade;
 import com.loopers.application.user.UserInfo;
 import com.loopers.interfaces.api.ApiResponse;
-import com.loopers.interfaces.api.user.UserV1Dto.ChargePointRequest;
 import com.loopers.interfaces.api.user.UserV1Dto.RegisterUserRequest;
-import com.loopers.interfaces.api.user.UserV1Dto.UserPointResponse;
 import com.loopers.interfaces.api.user.UserV1Dto.UserResponse;
-import com.loopers.support.RequireUserLoginId;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UserV1Controller implements UserV1ApiSpec {
 
-	public static final String X_USER_ID_HEADER = "X-USER-ID";
 	private final UserFacade userFacade;
 
 	@PostMapping("")
@@ -46,24 +41,5 @@ public class UserV1Controller implements UserV1ApiSpec {
 	@GetMapping("/{id}")
 	public ApiResponse<UserResponse> getUser(@PathVariable Long id) {
 		return ApiResponse.success(UserV1Dto.UserResponse.from(userFacade.getUser(id)));
-	}
-
-	@Override
-	@RequireUserLoginId
-	@GetMapping("/points")
-	public ApiResponse<UserPointResponse> getUserPoint(
-			@RequestHeader(X_USER_ID_HEADER) String loginId
-	) {
-		return ApiResponse.success(UserPointResponse.from(userFacade.getUserPoint(loginId)));
-	}
-
-	@Override
-	@RequireUserLoginId
-	@PostMapping("/points")
-	public ApiResponse<UserPointResponse> getUserPoint(
-			@RequestHeader(X_USER_ID_HEADER) String loginId,
-			@RequestBody ChargePointRequest request
-	) {
-		return ApiResponse.success(UserPointResponse.from(userFacade.chargePoint(loginId, request.amount())));
 	}
 }
