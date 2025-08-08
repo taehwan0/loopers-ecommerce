@@ -46,4 +46,8 @@ public class UserCouponEntity extends BaseEntity {
 	public static UserCouponEntity of(Long userId, CouponPolicyEntity couponPolicy) {
 		return new UserCouponEntity(userId, couponPolicy);
 	}
+
+	public void use() {
+		this.isUsed = true;
+	}
 }

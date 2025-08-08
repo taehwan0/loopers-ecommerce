@@ -1,5 +1,6 @@
 package com.loopers.application.order;
 
+import com.loopers.domain.coupon.CouponDiscountCalculator;
 import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.coupon.UserCouponEntity;
 import com.loopers.domain.order.CreateOrderItemDTO;
@@ -34,6 +35,7 @@ public class OrderFacade {
 	private final PaymentService paymentService;
 	private final PointService pointService;
 	private final CouponService couponService;
+	private final CouponDiscountCalculator couponDiscountCalculator;
 
 	@Transactional
 	public OrderInfo createOrder(CreateOrderCommand command) {
@@ -94,6 +96,17 @@ public class OrderFacade {
 
 		try {
 			order.getOrderItems().forEach(item -> productService.decreaseStock(item.getProductId(), item.getQuantity()));
+
+			if (order.getCouponId() != null) {
+				UserCouponEntity userCoupon = couponService.getUserCouponById(order.getCouponId());
+
+				if (userCoupon.isUsed()) {
+					throw new PaymentException(ErrorType.CONFLICT, "이미 사용된 쿠폰입니다.");
+				} else {
+					totalPrice = couponDiscountCalculator.calculateDiscount(totalPrice, userCoupon.getCouponPolicy());
+					userCoupon.use();
+				}
+			}
 
 			pointService.deductPoint(user.getId(), Point.of(totalPrice.getAmount()));
 
