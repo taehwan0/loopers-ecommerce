@@ -20,8 +20,8 @@ public class OrderService {
 		return orderRepository.findByIdempotencyKey(idempotencyKey);
 	}
 
-	public OrderEntity createOrder(UUID idempotencyKey, Long userId, List<CreateOrderItemDTO> itemDtos) {
-		OrderEntity order = OrderEntity.of(idempotencyKey, userId);
+	public OrderEntity createOrder(UUID idempotencyKey, Long userId, Long couponId, List<CreateOrderItemDTO> itemDtos) {
+		OrderEntity order = OrderEntity.of(idempotencyKey, userId, couponId);
 
 		List<OrderItemEntity> itemEntities = itemDtos.stream()
 				.map(item -> OrderItemEntity.of(

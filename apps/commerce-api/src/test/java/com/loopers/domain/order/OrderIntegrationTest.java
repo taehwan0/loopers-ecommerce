@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -120,6 +121,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -147,6 +149,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
 					user.getLoginId(),
+					null,
 					List.of()
 			);
 
@@ -175,6 +178,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
 					nonExistentUserId,
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -205,6 +209,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(nonExistentProductId, quantity)
 					)
@@ -235,6 +240,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -250,7 +256,7 @@ class OrderIntegrationTest {
 					() -> assertThat(secondOrder).isNotNull(),
 					() -> assertThat(firstOrder.id()).isEqualTo(secondOrder.id()),
 					() -> assertThat(firstOrder.orderStatus()).isEqualTo(secondOrder.orderStatus()),
-					() -> verify(orderService, times(1)).createOrder(any(UUID.class), anyLong(), anyList())
+					() -> verify(orderService, times(1)).createOrder(any(UUID.class), anyLong(), isNull(), anyList())
 			);
 		}
 	}
@@ -271,6 +277,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -300,6 +307,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -353,6 +361,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -382,6 +391,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)

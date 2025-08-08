@@ -7,9 +7,11 @@ public interface CouponRepository {
 
 	CouponPolicyEntity save(CouponPolicyEntity couponPolicyEntity);
 
-	Optional<CouponPolicyEntity> findById(Long id);
+	Optional<CouponPolicyEntity> findCouponPolicyById(Long id);
 
 	UserCouponEntity save(UserCouponEntity userCouponEntity);
 
 	boolean isAlreadyIssued(Long userId, Long couponPolicyId);
+
+	Optional<UserCouponEntity> findUserCouponById(Long couponId);
 }

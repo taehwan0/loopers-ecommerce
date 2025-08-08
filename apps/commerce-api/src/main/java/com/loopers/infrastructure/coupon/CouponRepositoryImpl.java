@@ -20,7 +20,7 @@ public class CouponRepositoryImpl implements CouponRepository {
 	}
 
 	@Override
-	public Optional<CouponPolicyEntity> findById(Long id) {
+	public Optional<CouponPolicyEntity> findCouponPolicyById(Long id) {
 		return couponPolicyJpaRepository.findById(id);
 	}
 
@@ -32,5 +32,10 @@ public class CouponRepositoryImpl implements CouponRepository {
 	@Override
 	public boolean isAlreadyIssued(Long userId, Long couponPolicyId) {
 		return userCouponJpaRepository.existsByUserIdAndCouponPolicyId(userId, couponPolicyId);
+	}
+
+	@Override
+	public Optional<UserCouponEntity> findUserCouponById(Long couponId) {
+		return userCouponJpaRepository.findById(couponId);
 	}
 }

@@ -18,7 +18,7 @@ public class CouponService {
 	}
 
 	public CouponPolicyEntity getCouponPolicy(Long couponPolicyId) {
-		return couponRepository.findById(couponPolicyId)
+		return couponRepository.findCouponPolicyById(couponPolicyId)
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "쿠폰 정책을 찾을 수 없습니다. [couponPolicyId = " + couponPolicyId + "]"));
 	}
 
@@ -30,5 +30,10 @@ public class CouponService {
 		UserCouponEntity userCoupon = UserCouponEntity.of(userId, couponPolicy);
 
 		return couponRepository.save(userCoupon);
+	}
+
+	public UserCouponEntity getUserCouponById(Long couponId) {
+		return couponRepository.findUserCouponById(couponId)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "쿠폰을 찾을 수 없습니다. [couponId = " + couponId + "]"));
 	}
 }
