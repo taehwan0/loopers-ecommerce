@@ -2,7 +2,6 @@ package com.loopers.domain.user;
 
 import com.loopers.domain.BaseEntity;
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,7 +12,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-@Table(name = "member")
+@Table(name = "user_account")
 @Entity
 public class UserEntity extends BaseEntity {
 
@@ -28,8 +27,6 @@ public class UserEntity extends BaseEntity {
 	private LocalDate birth;
 	@Column(name = "email", nullable = false)
 	private String email;
-	@Embedded
-	private Point point;
 
 	private UserEntity(String loginId, String name, Gender gender, String birth, String email) {
 		UserValidator.validateBeforeCreateUser(loginId, birth, email);
@@ -39,18 +36,9 @@ public class UserEntity extends BaseEntity {
 		this.gender = gender;
 		this.birth = LocalDate.parse(birth);
 		this.email = email;
-		this.point = Point.of(0);
 	}
 
 	public static UserEntity of(String loginId, String name, Gender gender, String birth, String email) {
 		return new UserEntity(loginId, name, gender, birth, email);
-	}
-
-	public void chargePoint(long pointValue) {
-		this.point.addPoint(pointValue);
-	}
-
-	public void debitPoints(long amount) {
-		this.point.debitPoints(amount);
 	}
 }

@@ -1,11 +1,16 @@
 package com.loopers.application.order;
 
+import com.loopers.domain.coupon.CouponDiscountCalculator;
+import com.loopers.domain.coupon.CouponService;
+import com.loopers.domain.coupon.UserCouponEntity;
 import com.loopers.domain.order.CreateOrderItemDTO;
 import com.loopers.domain.order.OrderEntity;
 import com.loopers.domain.order.OrderService;
 import com.loopers.domain.order.OrderStatus;
 import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.payment.PaymentService;
+import com.loopers.domain.point.Point;
+import com.loopers.domain.point.PointService;
 import com.loopers.domain.product.ProductEntity;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.UserEntity;
@@ -28,6 +33,9 @@ public class OrderFacade {
 	private final ProductService productService;
 	private final UserService userService;
 	private final PaymentService paymentService;
+	private final PointService pointService;
+	private final CouponService couponService;
+	private final CouponDiscountCalculator couponDiscountCalculator;
 
 	@Transactional
 	public OrderInfo createOrder(CreateOrderCommand command) {
@@ -58,7 +66,16 @@ public class OrderFacade {
 				)
 				.toList();
 
-		OrderEntity order = orderService.createOrder(command.idempotencyKey(), user.getId(), itemDtos);
+		if (command.couponId() != null) {
+			UserCouponEntity userCoupon = couponService.getUserCouponById(command.couponId());
+
+			if (userCoupon.isUsed()) {
+				throw new CoreException(ErrorType.CONFLICT, "이미 사용된 쿠폰입니다.");
+			}
+		}
+
+
+		OrderEntity order = orderService.createOrder(command.idempotencyKey(), user.getId(), command.couponId(), itemDtos);
 
 		return OrderInfo.from(order);
 	}
@@ -80,8 +97,18 @@ public class OrderFacade {
 		try {
 			order.getOrderItems().forEach(item -> productService.decreaseStock(item.getProductId(), item.getQuantity()));
 
-			// TODO: 포인트 도메인 분리 및 포인트 차감 실패 시 복구 로직 필요?
-			user.debitPoints(totalPrice.getAmount());
+			if (order.getCouponId() != null) {
+				UserCouponEntity userCoupon = couponService.getUserCouponById(order.getCouponId());
+
+				if (userCoupon.isUsed()) {
+					throw new PaymentException(ErrorType.CONFLICT, "이미 사용된 쿠폰입니다.");
+				} else {
+					totalPrice = couponDiscountCalculator.calculateDiscount(totalPrice, userCoupon.getCouponPolicy());
+					userCoupon.use();
+				}
+			}
+
+			pointService.deductPoint(user.getId(), Point.of(totalPrice.getAmount()));
 
 			paymentService.save(orderId, PaymentMethod.POINT, totalPrice.getAmount());
 
@@ -89,7 +116,6 @@ public class OrderFacade {
 		} catch (PaymentException e) {
 			order.updateStatus(OrderStatus.PAYMENT_FAILED);
 		}
-
 		return OrderInfo.from(order);
 	}
 }

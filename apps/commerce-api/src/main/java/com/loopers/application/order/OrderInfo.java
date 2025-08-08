@@ -7,6 +7,7 @@ import java.util.List;
 public record OrderInfo(
 		Long id,
 		String orderStatus,
+		Long couponId,
 		List<OrderItemInfo> orderItems
 ) {
 
@@ -15,7 +16,7 @@ public record OrderInfo(
 				.map(OrderItemInfo::from)
 				.toList();
 
-		return new OrderInfo(order.getId(), order.getOrderStatus().name(), orderItemInfos);
+		return new OrderInfo(order.getId(), order.getOrderStatus().name(), order.getCouponId(), orderItemInfos);
 	}
 
 	public record OrderItemInfo(

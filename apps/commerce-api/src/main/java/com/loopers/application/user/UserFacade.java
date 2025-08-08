@@ -1,8 +1,8 @@
 package com.loopers.application.user;
 
 
+import com.loopers.domain.point.PointService;
 import com.loopers.domain.user.Gender;
-import com.loopers.domain.user.Point;
 import com.loopers.domain.user.UserEntity;
 import com.loopers.domain.user.UserService;
 import com.loopers.domain.user.UserValidator;
@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserFacade {
 
 	private final UserService userService;
+	private final PointService pointService;
 
 	@Transactional
 	public UserInfo register(String loginId, String name, String gender, String birth, String email) {
@@ -27,6 +28,8 @@ public class UserFacade {
 		}
 
 		UserEntity userEntity = userService.create(loginId, name, Gender.of(gender), birth, email);
+		pointService.createPointAccount(userEntity.getId());
+
 		return UserInfo.from(userEntity);
 	}
 
@@ -39,27 +42,5 @@ public class UserFacade {
 		return userService.getUser(id)
 				.map(UserInfo::from)
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[id = " + id + "] 사용자를 찾을 수 없습니다."));
-	}
-
-	@Transactional(readOnly = true)
-	public PointInfo getUserPoint(String loginId) {
-		UserEntity user = userService.findByLoginId(loginId)
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + loginId + "] 사용자를 찾을 수 없습니다."));
-
-		Point point = user.getPoint();
-
-		return PointInfo.from(point);
-	}
-
-	@Transactional
-	public PointInfo chargePoint(String loginId, int amount) {
-		UserEntity userEntity = userService.findByLoginId(loginId)
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + loginId + "] 사용자를 찾을 수 없습니다."));
-
-		userEntity.chargePoint(amount);
-
-		Point point = userEntity.getPoint();
-
-		return PointInfo.from(point);
 	}
 }

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -14,6 +15,8 @@ import com.loopers.application.order.CreateOrderCommand.CreateOrderItem;
 import com.loopers.application.order.OrderFacade;
 import com.loopers.application.order.OrderInfo;
 import com.loopers.domain.brand.BrandEntity;
+import com.loopers.domain.point.Point;
+import com.loopers.domain.point.PointAccountEntity;
 import com.loopers.domain.product.ProductEntity;
 import com.loopers.domain.product.Stock;
 import com.loopers.domain.user.Gender;
@@ -21,6 +24,7 @@ import com.loopers.domain.user.UserEntity;
 import com.loopers.domain.vo.Price;
 import com.loopers.infrastructure.brand.BrandJpaRepository;
 import com.loopers.infrastructure.order.OrderJpaRepository;
+import com.loopers.infrastructure.point.PointAccountJpaRepository;
 import com.loopers.infrastructure.product.ProductJpaRepository;
 import com.loopers.infrastructure.user.UserJpaRepository;
 import com.loopers.support.error.CoreException;
@@ -60,6 +64,9 @@ class OrderIntegrationTest {
 	OrderJpaRepository orderJpaRepository;
 
 	@Autowired
+	PointAccountJpaRepository pointAccountJpaRepository;
+
+	@Autowired
 	DatabaseCleanUp databaseCleanUp;
 
 	@AfterEach
@@ -75,9 +82,13 @@ class OrderIntegrationTest {
 				"1990-01-01",
 				"foo@example.com");
 
-		user.chargePoint(10000L);
-
 		return userJpaRepository.save(user);
+	}
+
+	PointAccountEntity createPointAccount(UserEntity user, Point point) {
+		PointAccountEntity pointAccount = PointAccountEntity.of(user.getId());
+		pointAccount.charge(point);
+		return pointAccountJpaRepository.save(pointAccount);
 	}
 
 	ProductEntity createProduct() {
@@ -110,6 +121,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -137,6 +149,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
 					user.getLoginId(),
+					null,
 					List.of()
 			);
 
@@ -165,6 +178,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
 					nonExistentUserId,
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -195,6 +209,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(nonExistentProductId, quantity)
 					)
@@ -225,6 +240,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					idempotencyKey,
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -240,7 +256,7 @@ class OrderIntegrationTest {
 					() -> assertThat(secondOrder).isNotNull(),
 					() -> assertThat(firstOrder.id()).isEqualTo(secondOrder.id()),
 					() -> assertThat(firstOrder.orderStatus()).isEqualTo(secondOrder.orderStatus()),
-					() -> verify(orderService, times(1)).createOrder(any(UUID.class), anyLong(), anyList())
+					() -> verify(orderService, times(1)).createOrder(any(UUID.class), anyLong(), isNull(), anyList())
 			);
 		}
 	}
@@ -255,11 +271,13 @@ class OrderIntegrationTest {
 			// arrange
 			UserEntity user = createUser();
 			ProductEntity product = createProduct();
+			createPointAccount(user, Point.of(10000L));
 			int quantity = 1;
 
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -268,7 +286,6 @@ class OrderIntegrationTest {
 			OrderInfo order = orderFacade.createOrder(command);
 
 			// act
-			user.chargePoint(10000L);
 			OrderInfo orderInfo = orderFacade.payOrderByPoint(user.getLoginId(), order.id());
 
 			// assert
@@ -279,7 +296,7 @@ class OrderIntegrationTest {
 		}
 
 		@Transactional
-		@DisplayName("포인트가 부족하면, Bad Request 에러가 발생해 실패한다.")
+		@DisplayName("포인트가 부족하면, Conflict 에러가 발생해 실패한다.")
 		@Test
 		void failWithBadRequest_whenUserHasInsufficientPoints() {
 			// arrange
@@ -290,6 +307,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -298,8 +316,6 @@ class OrderIntegrationTest {
 			OrderInfo order = orderFacade.createOrder(command);
 
 			// act
-			user.debitPoints(user.getPoint().getPointValue()); // 모든 포인트를 사용하여 잔액을 0으로 만듭니다.
-
 			CoreException exception = assertThrows(
 					CoreException.class,
 					() -> orderFacade.payOrderByPoint(user.getLoginId(), order.id())
@@ -308,7 +324,7 @@ class OrderIntegrationTest {
 			// assert
 			assertAll(
 					() -> assertThat(exception).isNotNull(),
-					() -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST)
+					() -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.CONFLICT)
 			);
 		}
 
@@ -345,6 +361,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)
@@ -374,6 +391,7 @@ class OrderIntegrationTest {
 			CreateOrderCommand command = CreateOrderCommand.of(
 					UUID.randomUUID(),
 					user.getLoginId(),
+					null,
 					List.of(
 							CreateOrderItem.of(product.getId(), quantity)
 					)

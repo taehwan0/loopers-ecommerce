@@ -8,6 +8,7 @@ import java.util.UUID;
 public record CreateOrderCommand(
 		UUID idempotencyKey,
 		String loginId,
+		Long couponId,
 		List<CreateOrderItem> items
 ) {
 
@@ -25,8 +26,8 @@ public record CreateOrderCommand(
 		}
 	}
 
-	public static CreateOrderCommand of(UUID idempotencyKey, String loginId, List<CreateOrderItem> items) {
-		return new CreateOrderCommand(idempotencyKey, loginId, items);
+	public static CreateOrderCommand of(UUID idempotencyKey, String loginId, Long couponId, List<CreateOrderItem> items) {
+		return new CreateOrderCommand(idempotencyKey, loginId, couponId, items);
 	}
 
 	public record CreateOrderItem(
