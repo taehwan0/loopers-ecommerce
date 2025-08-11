@@ -19,15 +19,16 @@ public class CouponDiscountCalculator {
 				if (discountedPrice.compareTo(BigDecimal.ZERO) < 0) {
 					discountedPrice = BigDecimal.ZERO;
 				}
-
 				return Price.of(discountedPrice.longValue());
 			}
+
 			case CouponType.FIXED_RATE -> {
 				BigDecimal discountRate = couponPolicy.getDiscountValue().divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 				BigDecimal discountedPrice = BigDecimal.valueOf(price.getAmount()).multiply(BigDecimal.ONE.subtract(discountRate));
 
 				return Price.of(discountedPrice.longValue());
 			}
+
 			default -> throw new CoreException(ErrorType.BAD_REQUEST, "지원하지 않는 쿠폰 타입 입니다.");
 		}
 	}

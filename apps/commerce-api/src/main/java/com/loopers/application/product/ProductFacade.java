@@ -26,8 +26,7 @@ public class ProductFacade {
 
 	@Transactional
 	public ProductDetailInfo getProductDetail(Long productId) {
-		var product = productService.getProduct(productId)
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[productId = " + productId + "] 상품을 찾을 수 없습니다."));
+		var product = productService.getProduct(productId);
 
 		var brand = brandService.getBrand(product.getBrandId())
 				.orElseThrow(

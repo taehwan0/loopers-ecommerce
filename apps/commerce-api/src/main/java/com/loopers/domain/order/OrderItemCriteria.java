@@ -4,13 +4,13 @@ import com.loopers.domain.vo.Price;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 
-public record CreateOrderItemDTO(
+public record OrderItemCriteria(
 		Long productId,
 		Price price,
 		int quantity
 ) {
 
-	public CreateOrderItemDTO {
+	public OrderItemCriteria {
 		if (productId == null) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "productId 필수 입력값입니다.");
 		}
@@ -26,7 +26,7 @@ public record CreateOrderItemDTO(
 		price = Price.of(price.getAmount());
 	}
 
-	public static CreateOrderItemDTO of(Long productId, Price price, int quantity) {
-		return new CreateOrderItemDTO(productId, price, quantity);
+	public static OrderItemCriteria of(Long productId, Price price, int quantity) {
+		return new OrderItemCriteria(productId, price, quantity);
 	}
 }

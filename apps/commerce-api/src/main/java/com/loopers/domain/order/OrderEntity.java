@@ -77,12 +77,8 @@ public class OrderEntity extends BaseEntity {
 		return Price.of(totalAmount);
 	}
 
-	public void updateStatus(OrderStatus orderStatus) {
-		if (orderStatus == null) {
-			throw new CoreException(ErrorType.BAD_REQUEST, "주문 상태는 비어있을 수 없습니다.");
-		}
-
-		this.orderStatus = orderStatus;
+	public void paymentConfirm() {
+		this.orderStatus = OrderStatus.PAYMENT_CONFIRMED;
 	}
 
 	public void addItems(List<OrderItemEntity> orderItem) {

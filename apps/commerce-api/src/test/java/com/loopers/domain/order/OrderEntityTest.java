@@ -49,26 +49,5 @@ class OrderEntityTest {
 				() -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST)
 		);
 	}
-
-	@DisplayName("주문 상태 변경 시 null 값이 입력되면, Bad Request 에러가 발생해 실패한다.")
-	@Test
-	void failWithBadRequest_whenOrderStatusIsNull() {
-		// arrange
-		final UUID idempotencyKey = UUID.randomUUID();
-		final Long userId = 1L;
-		final OrderEntity orderEntity = OrderEntity.of(idempotencyKey, userId);
-
-		// act
-		CoreException exception = assertThrows(
-				CoreException.class,
-				() -> orderEntity.updateStatus(null)
-		);
-
-		// assert
-		assertAll(
-				() -> assertThat(exception).isNotNull(),
-				() -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST)
-		);
-	}
 }
 
