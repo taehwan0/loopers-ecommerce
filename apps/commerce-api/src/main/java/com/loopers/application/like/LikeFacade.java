@@ -24,8 +24,7 @@ public class LikeFacade {
 		UserEntity user = userService.findByLoginId(command.loginId())
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + command.loginId() + "] 사용자를 찾을 수 없습니다."));
 
-		ProductEntity product = productService.getProduct(command.productId())
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[productId = " + command.productId() + "] 상품을 찾을 수 없습니다."));
+		ProductEntity product = productService.getProduct(command.productId());
 
 		likeService.likeProduct(user.getId(), product.getId());
 	}
@@ -35,8 +34,7 @@ public class LikeFacade {
 		UserEntity user = userService.findByLoginId(command.loginId())
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + command.loginId() + "] 사용자를 찾을 수 없습니다."));
 
-		ProductEntity product = productService.getProduct(command.productId())
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[productId = " + command.productId() + "] 상품을 찾을 수 없습니다."));
+		ProductEntity product = productService.getProduct(command.productId());
 
 		likeService.unlikeProduct(user.getId(), product.getId());
 	}

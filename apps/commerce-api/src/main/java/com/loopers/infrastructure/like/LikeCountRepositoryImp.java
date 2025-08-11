@@ -14,6 +14,11 @@ public class LikeCountRepositoryImp implements LikeCountRepository {
 	private final LikeCountJpaRepository likeCountJpaRepository;
 
 	@Override
+	public Optional<LikeCountEntity> getTargetLikeCountWithPessimisticWriteLock(Long targetId, LikeTargetType targetType) {
+		return likeCountJpaRepository.findByTargetIdWithPessimisticWriteLock(targetId, targetType);
+	}
+
+	@Override
 	public Optional<LikeCountEntity> getTargetLikeCount(Long targetId, LikeTargetType targetType) {
 		return likeCountJpaRepository.findByTargetId(targetId, targetType);
 	}
