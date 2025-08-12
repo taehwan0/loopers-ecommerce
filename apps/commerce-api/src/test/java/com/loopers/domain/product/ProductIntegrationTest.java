@@ -147,17 +147,12 @@ public class ProductIntegrationTest {
 
 			productJpaRepository.saveAll(products);
 
-			List<LikeCountEntity> likesCount = products.stream()
-					.map(p -> {
+			products.forEach(p -> {
 						LikeCountEntity likeCount = LikeCountEntity.of(LikeTarget.of(p.getId(), LikeTargetType.PRODUCT));
 						for (int i = 0; i < likeCount.getId(); i++) {
 							likeCount.increaseLikeCount();
 						}
-						return likeCount;
-					})
-					.toList();
-
-			likeCountJpaRepository.saveAll(likesCount);
+					});
 		}
 
 		@DisplayName("상품 리스트 조회 시 가격 정렬 조건에 맞게 정렬되어 반환된다.")

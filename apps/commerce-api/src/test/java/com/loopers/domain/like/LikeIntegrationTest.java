@@ -17,12 +17,18 @@ import com.loopers.domain.user.Gender;
 import com.loopers.domain.user.UserEntity;
 import com.loopers.domain.vo.Price;
 import com.loopers.infrastructure.brand.BrandJpaRepository;
+import com.loopers.infrastructure.like.LikeCountJpaRepository;
 import com.loopers.infrastructure.product.ProductJpaRepository;
 import com.loopers.infrastructure.user.UserJpaRepository;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -59,6 +65,9 @@ class LikeIntegrationTest {
 	@Autowired
 	BrandJpaRepository brandJpaRepository;
 
+	@Autowired
+	LikeCountJpaRepository likeCountJpaRepository;
+
 	UserEntity createUser() {
 		return userJpaRepository.save(UserEntity.of(
 				REGISTERED_USER_ID,
@@ -67,6 +76,21 @@ class LikeIntegrationTest {
 				"2025-01-01",
 				"admin@example.com"
 		));
+	}
+
+	UserEntity createUser(int count) {
+		return userJpaRepository.save(UserEntity.of(
+				REGISTERED_USER_ID + count,
+				"ADMIN",
+				Gender.M,
+				"2025-01-01",
+				"admin@example.com"
+		));
+	}
+
+	LikeCountEntity createLikeCount(Long productId) {
+		LikeCountEntity likeCount = LikeCountEntity.of(LikeTarget.of(productId, LikeTargetType.PRODUCT));
+		return likeCountJpaRepository.save(likeCount);
 	}
 
 	ProductEntity createProduct() {
@@ -216,6 +240,53 @@ class LikeIntegrationTest {
 			assertAll(
 					() -> verify(likeService, times(1)).unlikeProduct(user.getId(), product.getId()),
 					() -> verify(likeRepository, times(0)).delete(any())
+			);
+		}
+	}
+
+	@DisplayName("상품 Like 동시성 테스트")
+	@Nested
+	class ProductLikeConcurrency {
+
+		@DisplayName("동시에 100명의 사용자가 좋아요를 시도했을 때 정상적으로 반영되어 집계된다.")
+		@Test
+		void success_whenMultipleUsersLike() throws InterruptedException {
+			// arrange
+			int numberOfThreads = 100;
+			CountDownLatch countDownLatch = new CountDownLatch(numberOfThreads);
+			ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+
+			ProductEntity product = createProduct();
+			LikeCountEntity likeCount = createLikeCount(product.getId());
+
+			List<UserEntity> users = IntStream.range(0, numberOfThreads)
+					.mapToObj(LikeIntegrationTest.this::createUser)
+					.toList();
+
+			// act
+			for (int i = 0; i < numberOfThreads; i++) {
+				final int idx = i;
+				executor.submit(() -> {
+							try {
+								LikeProductCommand command = LikeProductCommand.of(users.get(idx).getLoginId(), product.getId());
+								likeFacade.likeProduct(command);
+							} catch (Exception e) {
+								System.out.println("fail" + e);
+							} finally {
+								countDownLatch.countDown();
+							}
+						}
+				);
+			}
+
+			countDownLatch.await();
+			executor.shutdown();
+
+			// assert
+			LikeCountEntity productLikeCount = likeCountJpaRepository.findById(likeCount.getId()).get();
+			assertAll(
+					() -> assertThat(productLikeCount).isNotNull(),
+					() -> assertThat(productLikeCount.getLikeCount()).isEqualTo(numberOfThreads)
 			);
 		}
 	}

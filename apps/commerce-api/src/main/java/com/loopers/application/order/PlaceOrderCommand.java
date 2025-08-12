@@ -5,13 +5,14 @@ import com.loopers.support.error.ErrorType;
 import java.util.List;
 import java.util.UUID;
 
-public record CreateOrderCommand(
+public record PlaceOrderCommand(
 		UUID idempotencyKey,
 		String loginId,
+		Long couponId,
 		List<CreateOrderItem> items
 ) {
 
-	public CreateOrderCommand {
+	public PlaceOrderCommand {
 		if (idempotencyKey == null) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "idempotencyKey 필수 입력값입니다.");
 		}
@@ -25,8 +26,8 @@ public record CreateOrderCommand(
 		}
 	}
 
-	public static CreateOrderCommand of(UUID idempotencyKey, String loginId, List<CreateOrderItem> items) {
-		return new CreateOrderCommand(idempotencyKey, loginId, items);
+	public static PlaceOrderCommand of(UUID idempotencyKey, String loginId, Long couponId, List<CreateOrderItem> items) {
+		return new PlaceOrderCommand(idempotencyKey, loginId, couponId, items);
 	}
 
 	public record CreateOrderItem(

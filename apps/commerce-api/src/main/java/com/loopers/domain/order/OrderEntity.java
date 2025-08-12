@@ -36,10 +36,13 @@ public class OrderEntity extends BaseEntity {
 	@Column(name = "order_status", nullable = false)
 	private OrderStatus orderStatus;
 
+	@Column(name = "coupon_id", nullable = true)
+	private Long couponId;
+
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<OrderItemEntity> orderItems = new ArrayList<>();
 
-	private OrderEntity(UUID idempotencyKey, Long userId, OrderStatus orderStatus) {
+	private OrderEntity(UUID idempotencyKey, Long userId, OrderStatus orderStatus, Long couponId) {
 		if (idempotencyKey == null) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "주문은 idempotency key를 가져야 합니다.");
 		}
@@ -55,10 +58,15 @@ public class OrderEntity extends BaseEntity {
 		this.idempotencyKey = idempotencyKey;
 		this.userId = userId;
 		this.orderStatus = orderStatus;
+		this.couponId = couponId;
 	}
 
 	public static OrderEntity of(UUID idempotencyKey, Long userId) {
-		return new OrderEntity(idempotencyKey, userId, OrderStatus.PENDING);
+		return new OrderEntity(idempotencyKey, userId, OrderStatus.PENDING, null);
+	}
+
+	public static OrderEntity of(UUID idempotencyKey, Long userId, Long couponId) {
+		return new OrderEntity(idempotencyKey, userId, OrderStatus.PENDING, couponId);
 	}
 
 	public Price getTotalPrice() {
@@ -69,12 +77,8 @@ public class OrderEntity extends BaseEntity {
 		return Price.of(totalAmount);
 	}
 
-	public void updateStatus(OrderStatus orderStatus) {
-		if (orderStatus == null) {
-			throw new CoreException(ErrorType.BAD_REQUEST, "주문 상태는 비어있을 수 없습니다.");
-		}
-
-		this.orderStatus = orderStatus;
+	public void paymentConfirm() {
+		this.orderStatus = OrderStatus.PAYMENT_CONFIRMED;
 	}
 
 	public void addItems(List<OrderItemEntity> orderItem) {
