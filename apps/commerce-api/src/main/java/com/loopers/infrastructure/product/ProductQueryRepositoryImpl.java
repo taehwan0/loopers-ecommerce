@@ -21,7 +21,7 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
 	private final EntityManager entityManager;
 
 	@Override
-	public Page<ProductSummary> getProductSummaries(ProductSummarySort sortBy, int page, int size) {
+	public Page<ProductSummary> getProductSummaries(Long brandId, ProductSummarySort sortBy, int page, int size) {
 		String jpql = """
 				SELECT
 					p.id,
@@ -34,6 +34,8 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
 				FROM ProductEntity  p
 					INNER JOIN BrandEntity b ON p.brandId = b.id
 					LEFT OUTER JOIN LikeCountEntity lc ON lc.target.targetId = p.id AND lc.target.targetType = 'PRODUCT'
+				WHERE 
+					:brandId IS NULL OR p.brandId = :brandId
 				ORDER BY
 					CASE WHEN :sortBy = 'LATEST' THEN p.releaseDate END DESC,
 					CASE WHEN :sortBy = 'PRICE_ASC' THEN p.price.amount END ASC,
@@ -42,6 +44,7 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
 
 		List<Object[]> results = entityManager.createQuery(jpql, Object[].class)
 				.setParameter("sortBy", sortBy.name())
+				.setParameter("brandId", brandId)
 				.setFirstResult(page * size)
 				.setMaxResults(size)
 				.getResultList();

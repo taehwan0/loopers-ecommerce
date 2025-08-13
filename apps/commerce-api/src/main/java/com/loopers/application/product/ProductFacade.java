@@ -40,6 +40,7 @@ public class ProductFacade {
 	@Transactional
 	public PageInfo<ProductSummaryInfo> getProductSummaries(ProductSummariesCommand query) {
 		Page<ProductSummary> productSummariesPage = productQueryService.getProductSummaries(
+				query.brandId(),
 				query.sortBy().toProductSummarySort(),
 				query.page(),
 				query.size()

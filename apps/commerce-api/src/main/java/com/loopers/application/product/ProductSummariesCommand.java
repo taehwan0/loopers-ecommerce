@@ -5,11 +5,19 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 
 public record ProductSummariesCommand(
-		SortBy sortBy, int page, int size
+		Long brandId,
+		SortBy sortBy,
+		int page,
+		int size
 ) {
 
-	public static ProductSummariesCommand of(SortBy sortBy, int page, int size) {
-		return new ProductSummariesCommand(sortBy, page, size);
+	public static ProductSummariesCommand of(
+			Long brandId,
+			SortBy sortBy,
+			int page,
+			int size
+	) {
+		return new ProductSummariesCommand(brandId, sortBy, page, size);
 	}
 
 	public ProductSummariesCommand {
