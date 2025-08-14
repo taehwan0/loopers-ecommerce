@@ -35,6 +35,15 @@ public record ProductSummariesCommand(
 		LIKES_DESC,
 		;
 
+		public static SortBy from(String value) {
+			for (SortBy sortBy: values()) {
+				if (sortBy.name().equalsIgnoreCase(value)) {
+					return sortBy;
+				}
+			}
+			throw new CoreException(ErrorType.BAD_REQUEST, "잘못된 정렬 방식 입니다.");
+		}
+
 		public ProductSummarySort toProductSummarySort() {
 			return switch (this) {
 				case LATEST -> ProductSummarySort.LATEST;
