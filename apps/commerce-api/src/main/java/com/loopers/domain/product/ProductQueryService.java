@@ -11,10 +11,11 @@ public class ProductQueryService {
 	private final ProductQueryRepository productQueryRepository;
 
 	public Page<ProductSummary> getProductSummaries(
-		ProductSummarySort sortBy,
-		int page,
-		int size
+			Long brandId,
+			ProductSummarySort sortBy,
+			int page,
+			int size
 	) {
-		return productQueryRepository.getProductSummaries(sortBy, page, size);
+		return productQueryRepository.getProductSummaries(brandId, sortBy, page, size);
 	}
 }

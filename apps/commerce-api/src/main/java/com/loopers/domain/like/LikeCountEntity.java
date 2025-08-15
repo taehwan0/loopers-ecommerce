@@ -6,6 +6,7 @@ import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -14,8 +15,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "like_count")
+@Table(name = "like_count",
+		indexes = {
+		@Index(name = "idx_like_count_like_target", columnList = "target_id, target_type")
+		})
 public class LikeCountEntity extends BaseEntity {
+
 	@Embedded
 	LikeTarget target;
 
