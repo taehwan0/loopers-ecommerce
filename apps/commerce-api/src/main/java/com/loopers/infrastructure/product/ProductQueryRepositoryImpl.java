@@ -6,7 +6,9 @@ import com.loopers.domain.product.ProductSummary.BrandSummary;
 import com.loopers.domain.product.ProductSummarySort;
 import com.loopers.domain.vo.Price;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,51 +20,74 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ProductQueryRepositoryImpl implements ProductQueryRepository {
 
-	private final EntityManager entityManager;
+	private final EntityManager em;
 
 	@Override
 	public Page<ProductSummary> getProductSummaries(Long brandId, ProductSummarySort sortBy, int page, int size) {
-		String jpql = """
-				SELECT
-					p.id,
-					p.name,
-					p.price.amount,
-					p.releaseDate,
-					b.id,
-					b.name,
-					lc.likeCount
-				FROM ProductEntity  p
-					INNER JOIN BrandEntity b ON p.brandId = b.id
-					LEFT OUTER JOIN LikeCountEntity lc ON lc.target.targetId = p.id AND lc.target.targetType = 'PRODUCT'
-				WHERE 
-					:brandId IS NULL OR p.brandId = :brandId
-				ORDER BY
-					CASE WHEN :sortBy = 'LATEST' THEN p.releaseDate END DESC,
-					CASE WHEN :sortBy = 'PRICE_ASC' THEN p.price.amount END ASC,
-					CASE WHEN :sortBy = 'LIKE_DESC' THEN lc.likeCount END DESC
-				""";
 
-		List<Object[]> results = entityManager.createQuery(jpql, Object[].class)
-				.setParameter("sortBy", sortBy.name())
-				.setParameter("brandId", brandId)
-				.setFirstResult(page * size)
-				.setMaxResults(size)
-				.getResultList();
+		// 1) FROM / JOIN (공통)
+		String select =
+				"""
+						SELECT
+							p.id,
+							p.name,
+							p.price.amount,
+							p.releaseDate,
+							b.id,
+							b.name,
+							lc.likeCount
+						""";
 
-		List<ProductSummary> productSummaries = results.stream()
-				.map(this::mapToProductSummary)
-				.toList();
+		String fromJoin =
+				"""
+						FROM ProductEntity p
+						  INNER JOIN BrandEntity b ON p.brandId = b.id
+						  LEFT JOIN LikeCountEntity lc
+								 ON lc.target.targetId = p.id
+								AND lc.target.targetType = 'PRODUCT'
+						""";
 
-		long totalCount = getTotalCount();
+		// 2) WHERE (brandId 있을 때만 붙이기)
+		List<String> whereParts = new ArrayList<>();
+		if (brandId != null) {
+			whereParts.add("p.brandId = :brandId");
+		}
+		String where = whereParts.isEmpty() ? "" : "WHERE " + String.join(" AND ", whereParts) + "\n";
+
+		// 3) ORDER BY (정렬별 고정)
+		String orderBy;
+		// COALESCE로 NULL 정렬 안정화 (LEFT JOIN이므로)
+		switch (sortBy) {
+			case LATEST -> orderBy = "ORDER BY p.releaseDate DESC\n";
+			case PRICE_ASC -> orderBy = "ORDER BY p.price.amount ASC\n";
+			case LIKES_DESC -> orderBy = "ORDER BY COALESCE(lc.likeCount, 0) DESC\n";
+			default -> throw new IllegalArgumentException("Unknown sort: " + sortBy);
+		}
+
+		// 4) 본문 쿼리
+		String jpql = select + fromJoin + where + orderBy;
+
+		TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
+		if (brandId != null) {
+			query.setParameter("brandId", brandId);
+		}
+		query.setFirstResult(page * size);
+		query.setMaxResults(size);
+
+		List<Object[]> rows = query.getResultList();
+		List<ProductSummary> content = rows.stream().map(this::mapToProductSummary).toList();
+
+		// 5) 카운트도 동일 WHERE로
+		long total = getTotalCount(brandId);
 
 		return new PageImpl<>(
-				productSummaries,
+				content,
 				Pageable.ofSize(size).withPage(page),
-				totalCount
+				total
 		);
 	}
 
-	ProductSummary mapToProductSummary(Object[] r) {
+	private ProductSummary mapToProductSummary(Object[] r) {
 		return new ProductSummary(
 				(Long) r[0],
 				(String) r[1],
@@ -73,8 +98,16 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
 		);
 	}
 
-	long getTotalCount() {
-		String countJpql = "SELECT COUNT(p) FROM ProductEntity p";
-		return entityManager.createQuery(countJpql, Long.class).getSingleResult();
+	private long getTotalCount(Long brandId) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("SELECT COUNT(p) FROM ProductEntity p ");
+		if (brandId != null) {
+			sb.append("WHERE p.brandId = :brandId");
+		}
+		var countQuery = em.createQuery(sb.toString(), Long.class);
+		if (brandId != null) {
+			countQuery.setParameter("brandId", brandId);
+		}
+		return countQuery.getSingleResult();
 	}
 }
