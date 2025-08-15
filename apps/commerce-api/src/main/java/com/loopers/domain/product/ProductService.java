@@ -10,10 +10,20 @@ import org.springframework.stereotype.Component;
 public class ProductService {
 
 	private final ProductRepository productRepository;
+	private final ProductCacheRepository productCacheRepository;
 
 	public ProductEntity getProduct(Long id) {
-		return productRepository.findById(id)
-			.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[productId = " + id + "] 상품을 찾을 수 없습니다."));
+		return productCacheRepository.findById(id)
+				.orElseGet(
+						() -> {
+							ProductEntity product = productRepository.findById(id)
+									.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND,
+											"[productId = " + id + "] 상품을 찾을 수 없습니다."));
+
+							productCacheRepository.save(product);
+
+							return product;
+						});
 	}
 
 	public void decreaseStock(Long productId, int quantity) {
