@@ -17,7 +17,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "like_count",
 		indexes = {
-		@Index(name = "idx_like_count_like_target", columnList = "target_id, target_type")
+				@Index(name = "idx_like_count_like_target", columnList = "target_id, target_type"),
+				@Index(name = "idx_line_count_product_detail_desc", columnList = "target_type, like_count desc, target_id")
 		})
 public class LikeCountEntity extends BaseEntity {
 
