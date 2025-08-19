@@ -16,6 +16,7 @@ import com.loopers.domain.like.LikeTarget;
 import com.loopers.domain.like.LikeTargetType;
 import com.loopers.domain.vo.Price;
 import com.loopers.infrastructure.brand.BrandJpaRepository;
+import com.loopers.infrastructure.like.LikeCountJpaRepository;
 import com.loopers.infrastructure.product.ProductJpaRepository;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
@@ -40,6 +41,9 @@ class ProductIntegrationTest {
 
 	@Autowired
 	BrandJpaRepository brandJpaRepository;
+
+	@Autowired
+	LikeCountJpaRepository likeCountJpaRepository;
 
 	@Autowired
 	DatabaseCleanUp databaseCleanUp;
@@ -143,7 +147,12 @@ class ProductIntegrationTest {
 					)
 			);
 
-			productJpaRepository.saveAll(products);
+			List<ProductEntity> createdProducts = productJpaRepository.saveAll(products);
+			productJpaRepository.flush();
+
+			List<LikeCountEntity> likeCounts = createdProducts.stream().map(p -> LikeCountEntity.of(LikeTarget.of(p.getId(), LikeTargetType.PRODUCT))).toList();
+			likeCountJpaRepository.saveAll(likeCounts);
+			likeCountJpaRepository.flush();
 
 			products.forEach(p -> {
 				LikeCountEntity likeCount = LikeCountEntity.of(LikeTarget.of(p.getId(), LikeTargetType.PRODUCT));

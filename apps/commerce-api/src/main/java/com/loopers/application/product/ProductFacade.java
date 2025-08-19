@@ -9,11 +9,9 @@ import com.loopers.domain.product.ProductService;
 import com.loopers.domain.product.ProductSummary;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
-import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,17 +23,9 @@ public class ProductFacade {
 	private final BrandService brandService;
 	private final LikeService likeService;
 	private final ProductQueryService productQueryService;
-	private final RedisTemplate<String, Object> redisTemplate;
 
 	@Transactional
 	public ProductDetailInfo getProductDetail(Long productId) {
-
-		final String key = "productDetail:" + productId;
-		Object object = redisTemplate.opsForValue().get(key);
-		if (object != null) {
-			return (ProductDetailInfo) object;
-		}
-
 		var product = productService.getProduct(productId);
 
 		var brand = brandService.getBrand(product.getBrandId())
@@ -44,11 +34,7 @@ public class ProductFacade {
 
 		LikeCountEntity likeCount = likeService.getProductLikeCount(productId);
 
-		ProductDetailInfo productDetailInfo = ProductDetailInfo.from(product, brand, likeCount);
-
-		redisTemplate.opsForValue().set(key, productDetailInfo, Duration.ofMinutes(10));
-
-		return productDetailInfo;
+		return ProductDetailInfo.from(product, brand, likeCount);
 	}
 
 	@Transactional
