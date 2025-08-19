@@ -58,43 +58,6 @@ public class ProductQueryRepositoryImpl implements ProductQueryRepository {
 				.fetch();
 	}
 
-	public List<ProductSummary> getProductSummariesWithBrandFilter2(Long brandId, ProductSummarySort sortBy, int page, int size) {
-		var product = QProductEntity.productEntity;
-		var brand = QBrandEntity.brandEntity;
-		var likeCount = QLikeCountEntity.likeCountEntity;
-
-		var sort = switch (sortBy) {
-			case LATEST -> product.releaseDate.desc();
-			case PRICE_ASC -> product.price.amount.asc();
-			case LIKES_DESC -> likeCount.likeCount.desc();
-		};
-
-		return jpaQueryFactory
-				.select(
-						Projections.constructor(
-								ProductSummary.class,
-								product.id,
-								product.name,
-								product.price,
-								product.releaseDate,
-								brand.id,
-								brand.name,
-								likeCount.likeCount
-						)
-				)
-				.from(product)
-				.join(brand).on(product.brandId.eq(brand.id))
-				.leftJoin(likeCount).on(product.id.eq(likeCount.target.targetId))
-				.where(
-						brandIdEq(brandId),
-						likeCount.target.targetType.eq(LikeTargetType.PRODUCT)
-				)
-				.orderBy(sort)
-				.offset((long) page * size)
-				.limit(size)
-				.fetch();
-	}
-
 	private BooleanExpression brandIdEq(Long brandId) {
 		return brandId != null ? QProductEntity.productEntity.brandId.eq(brandId) : null;
 	}
