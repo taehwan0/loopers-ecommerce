@@ -11,6 +11,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -19,6 +20,34 @@ import org.springframework.stereotype.Repository;
 public class ProductQueryRepositoryImpl implements ProductQueryRepository {
 
 	private final JPAQueryFactory jpaQueryFactory;
+
+	@Override
+	public Optional<ProductSummary> getProductSummary(Long productId) {
+		var product = QProductEntity.productEntity;
+		var brand = QBrandEntity.brandEntity;
+		var likeCount = QLikeCountEntity.likeCountEntity;
+
+		ProductSummary productSummary = jpaQueryFactory
+				.select(
+						Projections.constructor(
+								ProductSummary.class,
+								product.id,
+								product.name,
+								product.price,
+								product.releaseDate,
+								brand.id,
+								brand.name,
+								likeCount.likeCount
+						)
+				)
+				.from(product)
+				.join(brand).on(brand.id.eq(product.brandId))
+				.leftJoin(likeCount).on(likeCount.target.targetId.eq(product.id))
+				.where(product.id.eq(productId))
+				.fetchFirst();
+
+		return Optional.ofNullable(productSummary);
+	}
 
 	@Override
 	public List<ProductSummary> getProductSummariesWithBrandFilter(Long brandId, ProductSummarySort sortBy, int page, int size) {

@@ -1,5 +1,7 @@
 package com.loopers.domain.product;
 
+import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorType;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,6 +14,17 @@ import org.springframework.stereotype.Component;
 public class ProductQueryService {
 
 	private final ProductQueryRepository productQueryRepository;
+	private final ProductQueryCacheRepository productQueryCacheRepository;
+
+	public ProductSummary getProductSummary(Long productId) {
+		return productQueryCacheRepository.getProductSummary(productId)
+				.orElseGet(() -> {
+					ProductSummary productSummary = productQueryRepository.getProductSummary(productId)
+							.orElseThrow((() -> new CoreException(ErrorType.NOT_FOUND, "[productId = " + productId + "] 상품을 찾을 수 없습니다.")));
+					productQueryCacheRepository.saveProductSummary(productSummary);
+					return productSummary;
+				});
+	}
 
 	// TODO: condition vo로 변경 필요함!
 	public Page<ProductSummary> getProductSummaries(
