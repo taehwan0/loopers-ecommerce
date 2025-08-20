@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-public class ProductIntegrationTest {
+class ProductIntegrationTest {
 
 	@Autowired
 	ProductFacade productFacade;
@@ -118,9 +118,11 @@ public class ProductIntegrationTest {
 
 		static final String REGISTERED_BRAND_NAME = "NIKE";
 
-		void createProducts() {
-			BrandEntity brand = brandJpaRepository.save(BrandEntity.of(REGISTERED_BRAND_NAME, "description"));
+		BrandEntity createBrand() {
+			return brandJpaRepository.save(BrandEntity.of(REGISTERED_BRAND_NAME, "description"));
+		}
 
+		List<ProductEntity> createProducts(BrandEntity brand) {
 			List<ProductEntity> products = List.of(
 					ProductEntity.of(
 							"SHOES-001",
@@ -145,14 +147,26 @@ public class ProductIntegrationTest {
 					)
 			);
 
-			productJpaRepository.saveAll(products);
+			List<ProductEntity> createdProducts = productJpaRepository.saveAll(products);
+			productJpaRepository.flush();
+
+			List<LikeCountEntity> likeCounts = createdProducts.stream().map(p -> LikeCountEntity.of(LikeTarget.of(p.getId(), LikeTargetType.PRODUCT))).toList();
+			likeCountJpaRepository.saveAll(likeCounts);
+			likeCountJpaRepository.flush();
 
 			products.forEach(p -> {
-						LikeCountEntity likeCount = LikeCountEntity.of(LikeTarget.of(p.getId(), LikeTargetType.PRODUCT));
-						for (int i = 0; i < likeCount.getId(); i++) {
-							likeCount.increaseLikeCount();
-						}
-					});
+				LikeCountEntity likeCount = LikeCountEntity.of(LikeTarget.of(p.getId(), LikeTargetType.PRODUCT));
+				for (int i = 0; i < likeCount.getId(); i++) {
+					likeCount.increaseLikeCount();
+				}
+			});
+
+			return products;
+		}
+
+		void createProducts() {
+			BrandEntity brand = createBrand();
+			createProducts(brand);
 		}
 
 		@DisplayName("상품 리스트 조회 시 가격 정렬 조건에 맞게 정렬되어 반환된다.")
@@ -160,7 +174,7 @@ public class ProductIntegrationTest {
 		void returnProductListSortedByPrice_whenSortIsPrice() {
 			// arrange
 			createProducts();
-			ProductSummariesCommand command = ProductSummariesCommand.of(SortBy.PRICE_ASC, 0, 10);
+			ProductSummariesCommand command = ProductSummariesCommand.of(null, SortBy.PRICE_ASC, 0, 10);
 
 			// act
 			PageInfo<ProductSummaryInfo> productSummaries = productFacade.getProductSummaries(command);
@@ -172,7 +186,6 @@ public class ProductIntegrationTest {
 					() -> assertThat(productSummaries.content().get(0).price()).isLessThanOrEqualTo(productSummaries.content().get(1).price()),
 					() -> assertThat(productSummaries.content().get(1).price()).isLessThanOrEqualTo(productSummaries.content().get(2).price())
 			);
-
 		}
 
 		@DisplayName("상품 리스트 조회 시 좋아요 순 조건에 맞게 정렬되어 반환된다.")
@@ -180,7 +193,7 @@ public class ProductIntegrationTest {
 		void returnProductListSortedByLikeCount_whenSortIsLikeCount() {
 			// arrange
 			createProducts();
-			ProductSummariesCommand command = ProductSummariesCommand.of(SortBy.LIKES_DESC, 0, 10);
+			ProductSummariesCommand command = ProductSummariesCommand.of(null, SortBy.LIKES_DESC, 0, 10);
 
 			// act
 			PageInfo<ProductSummaryInfo> productSummaries = productFacade.getProductSummaries(command);
@@ -199,7 +212,7 @@ public class ProductIntegrationTest {
 		void returnProductListSortedByLatest_whenSortIsLatest() {
 			// arrange
 			createProducts();
-			ProductSummariesCommand command = ProductSummariesCommand.of(SortBy.LATEST, 0, 10);
+			ProductSummariesCommand command = ProductSummariesCommand.of(null, SortBy.LATEST, 0, 10);
 
 			// act
 			PageInfo<ProductSummaryInfo> productSummaries = productFacade.getProductSummaries(command);
@@ -219,7 +232,7 @@ public class ProductIntegrationTest {
 			// arrange
 			int page = 100;
 			int size = 10;
-			ProductSummariesCommand command = ProductSummariesCommand.of(SortBy.LATEST, page, size);
+			ProductSummariesCommand command = ProductSummariesCommand.of(null, SortBy.LATEST, page, size);
 
 			// act
 			PageInfo<ProductSummaryInfo> productSummaries = productFacade.getProductSummaries(command);
@@ -230,6 +243,51 @@ public class ProductIntegrationTest {
 					() -> assertThat(productSummaries.content()).isEmpty(),
 					() -> assertThat(productSummaries.page()).isEqualTo(page),
 					() -> assertThat(productSummaries.size()).isEqualTo(size)
+			);
+		}
+
+		@DisplayName("상품이 하나도 없는 brandId가 필터에 포함된다면, 빈 배열이 반환된다.")
+		@Test
+		void returnEmptyList_whenEmptyProductsBrandFilter() {
+			// arrange
+			int page = 1;
+			int size = 10;
+			ProductSummariesCommand command = ProductSummariesCommand.of(-999L, SortBy.LATEST, page, size);
+
+			// act
+			PageInfo<ProductSummaryInfo> productSummaries = productFacade.getProductSummaries(command);
+
+			// assert
+			assertAll(
+					() -> assertThat(productSummaries).isNotNull(),
+					() -> assertThat(productSummaries.content()).isEmpty(),
+					() -> assertThat(productSummaries.page()).isEqualTo(page),
+					() -> assertThat(productSummaries.size()).isEqualTo(size)
+			);
+		}
+
+		@DisplayName("상품이 존재하는 brandId로 필터하면, 해당 상품들이 반환된다.")
+		@Test
+		void returnProductList_whenBrandFilterIsExists() {
+			// arrange
+			int page = 0;
+			int size = 10;
+
+			BrandEntity brand = createBrand();
+			List<ProductEntity> products = createProducts(brand);
+
+			ProductSummariesCommand command = ProductSummariesCommand.of(brand.getId(), SortBy.LATEST, page, size);
+
+			// act
+			PageInfo<ProductSummaryInfo> productSummaries = productFacade.getProductSummaries(command);
+
+			// assert
+			assertAll(
+					() -> assertThat(productSummaries).isNotNull(),
+					() -> assertThat(productSummaries.content()).isNotEmpty(),
+					() -> assertThat(productSummaries.content().get(0).releaseDate()).isAfterOrEqualTo(productSummaries.content().get(1).releaseDate()),
+					() -> assertThat(productSummaries.content().get(1).releaseDate()).isAfterOrEqualTo(productSummaries.content().get(2).releaseDate()),
+					() -> assertThat(productSummaries.content().stream().filter(p -> p.brand().id().equals(brand.getId())).count()).isEqualTo(products.size())
 			);
 		}
 	}

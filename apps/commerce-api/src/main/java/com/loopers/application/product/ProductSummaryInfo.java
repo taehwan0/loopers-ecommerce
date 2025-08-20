@@ -17,7 +17,7 @@ public record ProductSummaryInfo(
 				productSummary.id(),
 				productSummary.name(),
 				productSummary.price().getAmount(),
-				new BrandSummary(productSummary.brand().id(), productSummary.brand().name()),
+				new BrandSummary(productSummary.brandId(), productSummary.brandName()),
 				productSummary.likeCount(),
 				productSummary.releaseDate()
 		);

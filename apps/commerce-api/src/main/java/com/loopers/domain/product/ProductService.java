@@ -13,7 +13,8 @@ public class ProductService {
 
 	public ProductEntity getProduct(Long id) {
 		return productRepository.findById(id)
-			.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[productId = " + id + "] 상품을 찾을 수 없습니다."));
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND,
+						"[productId = " + id + "] 상품을 찾을 수 없습니다."));
 	}
 
 	public void decreaseStock(Long productId, int quantity) {

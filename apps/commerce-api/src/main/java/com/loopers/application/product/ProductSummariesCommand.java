@@ -5,11 +5,19 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 
 public record ProductSummariesCommand(
-		SortBy sortBy, int page, int size
+		Long brandId,
+		SortBy sortBy,
+		int page,
+		int size
 ) {
 
-	public static ProductSummariesCommand of(SortBy sortBy, int page, int size) {
-		return new ProductSummariesCommand(sortBy, page, size);
+	public static ProductSummariesCommand of(
+			Long brandId,
+			SortBy sortBy,
+			int page,
+			int size
+	) {
+		return new ProductSummariesCommand(brandId, sortBy, page, size);
 	}
 
 	public ProductSummariesCommand {
@@ -26,6 +34,15 @@ public record ProductSummariesCommand(
 		PRICE_ASC,
 		LIKES_DESC,
 		;
+
+		public static SortBy from(String value) {
+			for (SortBy sortBy: values()) {
+				if (sortBy.name().equalsIgnoreCase(value)) {
+					return sortBy;
+				}
+			}
+			throw new CoreException(ErrorType.BAD_REQUEST, "잘못된 정렬 방식 입니다.");
+		}
 
 		public ProductSummarySort toProductSummarySort() {
 			return switch (this) {

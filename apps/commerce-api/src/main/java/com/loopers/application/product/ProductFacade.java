@@ -1,14 +1,8 @@
 package com.loopers.application.product;
 
 import com.loopers.application.shared.PageInfo;
-import com.loopers.domain.brand.BrandService;
-import com.loopers.domain.like.LikeCountEntity;
-import com.loopers.domain.like.LikeService;
 import com.loopers.domain.product.ProductQueryService;
-import com.loopers.domain.product.ProductService;
 import com.loopers.domain.product.ProductSummary;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,27 +13,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProductFacade {
 
-	private final ProductService productService;
-	private final BrandService brandService;
-	private final LikeService likeService;
 	private final ProductQueryService productQueryService;
 
 	@Transactional
 	public ProductDetailInfo getProductDetail(Long productId) {
-		var product = productService.getProduct(productId);
-
-		var brand = brandService.getBrand(product.getBrandId())
-				.orElseThrow(
-						() -> new CoreException(ErrorType.NOT_FOUND, "[brandId = " + product.getBrandId() + "] 브랜드를 찾을 수 없습니다."));
-
-		LikeCountEntity likeCount = likeService.getProductLikeCount(productId);
-
-		return ProductDetailInfo.from(product, brand, likeCount);
+		ProductSummary product = productQueryService.getProductSummary(productId);
+		return new ProductDetailInfo(
+				product.id(),
+				product.name(),
+				product.price().getAmount(),
+				0,
+				new BrandSummary(product.brandId(), product.brandName()),
+				product.likeCount()
+		);
 	}
 
 	@Transactional
 	public PageInfo<ProductSummaryInfo> getProductSummaries(ProductSummariesCommand query) {
 		Page<ProductSummary> productSummariesPage = productQueryService.getProductSummaries(
+				query.brandId(),
 				query.sortBy().toProductSummarySort(),
 				query.page(),
 				query.size()

@@ -1,11 +1,19 @@
 package com.loopers.domain.product;
 
-import org.springframework.data.domain.Page;
+import java.util.List;
+import java.util.Optional;
 
 public interface ProductQueryRepository {
-	Page<ProductSummary> getProductSummaries(
+	Optional<ProductSummary> getProductSummary(Long productId);
+
+	List<ProductSummary> getProductSummariesWithBrandFilter(
+			Long brandId,
 			ProductSummarySort sortBy,
 			int page,
 			int size
 	);
+
+	long getTotalCount();
+
+	long getTotalCountWithBrandFilter(Long brandId);
 }

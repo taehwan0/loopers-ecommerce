@@ -8,14 +8,9 @@ public record ProductSummary(
 		String name,
 		Price price,
 		LocalDate releaseDate,
-		BrandSummary brand,
+		Long brandId,
+		String brandName,
 		int likeCount
 ) {
 
-	public record BrandSummary(
-			Long id,
-			String name
-	) {
-
-	}
 }
