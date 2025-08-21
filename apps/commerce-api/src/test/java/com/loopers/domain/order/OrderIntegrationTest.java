@@ -10,6 +10,7 @@ import com.loopers.application.order.PaymentInfo;
 import com.loopers.application.order.PlaceOrderCommand;
 import com.loopers.application.order.PlaceOrderCommand.CreateOrderItem;
 import com.loopers.application.order.PointPaymentCommand;
+import com.loopers.application.payment.PaymentFacade;
 import com.loopers.domain.brand.BrandEntity;
 import com.loopers.domain.payment.PaymentStatus;
 import com.loopers.domain.point.Point;
@@ -43,6 +44,9 @@ class OrderIntegrationTest {
 
 	@Autowired
 	OrderFacade orderFacade;
+
+	@Autowired
+	PaymentFacade paymentFacade;
 
 	@MockitoSpyBean
 	OrderService orderService;
@@ -117,7 +121,7 @@ class OrderIntegrationTest {
 
 			// act
 			OrderInfo orderInfo = orderFacade.placeOrder(command);
-			PaymentInfo paymentInfo = orderFacade.paymentByPoint(PointPaymentCommand.of(orderInfo.id()));
+			PaymentInfo paymentInfo = paymentFacade.paymentByPoint(PointPaymentCommand.of(orderInfo.id()));
 
 			// assert
 			assertAll(
@@ -145,7 +149,7 @@ class OrderIntegrationTest {
 			OrderInfo orderInfo = orderFacade.placeOrder(command);
 
 			// act
-			PaymentInfo paymentInfo = orderFacade.paymentByPoint(PointPaymentCommand.of(orderInfo.id()));
+			PaymentInfo paymentInfo = paymentFacade.paymentByPoint(PointPaymentCommand.of(orderInfo.id()));
 
 			// assert
 			assertAll(
