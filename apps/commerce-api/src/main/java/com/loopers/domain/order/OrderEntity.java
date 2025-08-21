@@ -81,6 +81,10 @@ public class OrderEntity extends BaseEntity {
 		this.orderStatus = OrderStatus.PAYMENT_CONFIRMED;
 	}
 
+	public void paymentFailed() {
+		this.orderStatus = OrderStatus.PAYMENT_FAILED;
+	}
+
 	public void addItems(List<OrderItemEntity> orderItem) {
 		this.orderItems.addAll(orderItem);
 	}

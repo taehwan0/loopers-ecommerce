@@ -6,9 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.loopers.application.order.OrderFacade;
 import com.loopers.application.order.OrderInfo;
+import com.loopers.application.order.PaymentInfo;
 import com.loopers.application.order.PlaceOrderCommand;
 import com.loopers.application.order.PlaceOrderCommand.CreateOrderItem;
+import com.loopers.application.order.PointPaymentCommand;
 import com.loopers.domain.brand.BrandEntity;
+import com.loopers.domain.payment.PaymentStatus;
 import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointAccountEntity;
 import com.loopers.domain.product.ProductEntity;
@@ -114,16 +117,17 @@ class OrderIntegrationTest {
 
 			// act
 			OrderInfo orderInfo = orderFacade.placeOrder(command);
+			PaymentInfo paymentInfo = orderFacade.paymentByPoint(PointPaymentCommand.of(orderInfo.id()));
 
 			// assert
 			assertAll(
-					() -> assertThat(orderInfo).isNotNull(),
-					() -> assertThat(orderInfo.orderStatus()).isEqualTo(OrderStatus.PAYMENT_CONFIRMED.name())
+					() -> assertThat(paymentInfo).isNotNull(),
+					() -> assertThat(paymentInfo.paymentStatus()).isEqualTo(PaymentStatus.SUCCESS.name())
 			);
 		}
 
 		@Transactional
-		@DisplayName("포인트가 부족하면, Conflict 에러가 발생해 실패한다.")
+		@DisplayName("포인트가 부족하면, 결제 실패 상태로 반환된다.")
 		@Test
 		void failWithBadRequest_whenUserHasInsufficientPoints() {
 			// arrange
@@ -138,16 +142,15 @@ class OrderIntegrationTest {
 					List.of(PlaceOrderCommand.CreateOrderItem.of(product.getId(), quantity))
 			);
 
+			OrderInfo orderInfo = orderFacade.placeOrder(command);
+
 			// act
-			CoreException exception = assertThrows(
-					CoreException.class,
-					() -> orderFacade.placeOrder(command)
-			);
+			PaymentInfo paymentInfo = orderFacade.paymentByPoint(PointPaymentCommand.of(orderInfo.id()));
 
 			// assert
 			assertAll(
-					() -> assertThat(exception).isNotNull(),
-					() -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.CONFLICT)
+					() -> assertThat(paymentInfo).isNotNull(),
+					() -> assertThat(paymentInfo.paymentStatus()).isEqualTo(PaymentStatus.FAILURE.name())
 			);
 		}
 
@@ -159,7 +162,7 @@ class OrderIntegrationTest {
 			UserEntity user = createUser();
 			ProductEntity product = createProduct();
 			createPointAccount(user, Point.of(1000000L));
-			int quantity = product.getStock().getQuantity() + 1; // 재고보다 많은 수량
+			int quantity = product.getStock().getQuantity() + 100; // 재고보다 많은 수량
 
 			PlaceOrderCommand command = PlaceOrderCommand.of(
 					UUID.randomUUID(),

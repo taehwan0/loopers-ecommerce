@@ -27,6 +27,13 @@ public class PaymentEntity extends BaseEntity {
 	@Column(name = "amount", nullable = false)
 	private long amount;
 
+	@Column(name = "payment_status", nullable = false)
+	@Enumerated(EnumType.STRING)
+	private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+
+	@Column(name = "transaction_key", nullable = true)
+	private String transactionKey;
+
 	private PaymentEntity(Long orderId, PaymentMethod paymentMethod, long amount) {
 		if (orderId == null) {
 			throw new CoreException(ErrorType.BAD_REQUEST, "주문 ID는 비어있을 수 없습니다.");
@@ -47,5 +54,20 @@ public class PaymentEntity extends BaseEntity {
 
 	public static PaymentEntity of(Long orderId, PaymentMethod paymentMethod, long amount) {
 		return new PaymentEntity(orderId, paymentMethod, amount);
+	}
+
+	public void success() {
+		this.paymentStatus = PaymentStatus.SUCCESS;
+	}
+
+	public void fail() {
+		this.paymentStatus = PaymentStatus.FAILURE;
+	}
+
+	public void setTransactionKey(String transactionKey) {
+		if (transactionKey == null || transactionKey.isBlank()) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "거래 키는 비어있을 수 없습니다.");
+		}
+		this.transactionKey = transactionKey;
 	}
 }

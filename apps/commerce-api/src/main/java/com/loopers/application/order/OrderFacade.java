@@ -6,9 +6,17 @@ import com.loopers.domain.coupon.UserCouponEntity;
 import com.loopers.domain.order.OrderEntity;
 import com.loopers.domain.order.OrderItemCriteria;
 import com.loopers.domain.order.OrderService;
+import com.loopers.domain.order.OrderStatus;
+import com.loopers.domain.payment.PaymentClient;
+import com.loopers.domain.payment.PaymentClient.PaymentRequest;
+import com.loopers.domain.payment.PaymentClient.PaymentRequest.CardNumber;
+import com.loopers.domain.payment.PaymentClient.PaymentRequest.CardType;
+import com.loopers.domain.payment.PaymentClient.PaymentResponse;
+import com.loopers.domain.payment.PaymentEntity;
 import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.Point;
+import com.loopers.domain.point.PointAccountEntity;
 import com.loopers.domain.point.PointService;
 import com.loopers.domain.product.ProductEntity;
 import com.loopers.domain.product.ProductService;
@@ -17,6 +25,7 @@ import com.loopers.domain.user.UserService;
 import com.loopers.domain.vo.Price;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +43,11 @@ public class OrderFacade {
 	private final PointService pointService;
 	private final CouponService couponService;
 	private final CouponDiscountCalculator couponDiscountCalculator;
+	private final PaymentClient paymentClient;
 
-	// 주문 생성 자체가 실패하는 경우엔 400에러로 반환할 수 있도록 한다.
-	// 주문 생성 자체는 성공했지만,
+
 	@Transactional
 	public OrderInfo placeOrder(PlaceOrderCommand command) {
-		// 이미 멱등키로 생성한 주문이 존재한다면, 그대로 반환한다.
 		Optional<OrderEntity> orderOptional = orderService.getOrder(command.idempotencyKey());
 		if (orderOptional.isPresent()) {
 			OrderEntity order = orderOptional.get();
@@ -51,7 +59,8 @@ public class OrderFacade {
 		}
 
 		UserEntity user = userService.findByLoginId(command.loginId())
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + command.loginId() + "] 사용자를 찾을 수 없습니다."));
+				.orElseThrow(
+						() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + command.loginId() + "] 사용자를 찾을 수 없습니다."));
 
 		List<OrderItemCriteria> orderItemCriteria = command.items().stream()
 				.map(i -> {
@@ -60,6 +69,10 @@ public class OrderFacade {
 				})
 				.toList();
 
+		if (command.couponId() != null) {
+			couponService.getUserCouponById(command.couponId());
+		}
+
 		OrderEntity order = orderService.createOrder(
 				command.idempotencyKey(),
 				user.getId(),
@@ -67,9 +80,65 @@ public class OrderFacade {
 				orderItemCriteria
 		);
 
+		order.getOrderItems().forEach(item -> productService.decreaseStock(item.getProductId(), item.getQuantity()));
+
+		return OrderInfo.from(order);
+	}
+
+	@Transactional
+	public PaymentInfo paymentByPoint(PointPaymentCommand command) {
+		OrderEntity order = validateAndGetOrder(command.orderId());
+
+		Price totalPrice = calculateTotalPrice(order);
+		PaymentEntity payment = paymentService.save(order.getId(), PaymentMethod.POINT, totalPrice.getAmount());
+
+		PointAccountEntity pointAccount = pointService.getPointAccount(order.getUserId());
+		if (pointAccount.getPointBalance().getValue().compareTo(BigDecimal.valueOf(totalPrice.getAmount())) <= 0) {
+			payment.fail();
+			order.paymentFailed();
+		} else {
+			pointService.deductPoint(order.getUserId(), Point.of(totalPrice.getAmount()));
+			payment.success();
+			order.paymentConfirm();
+		}
+
+		return PaymentInfo.from(payment);
+	}
+
+	@Transactional
+	public PaymentInfo paymentByCard(CardPaymentCommand command) {
+		OrderEntity order = validateAndGetOrder(command.orderId());
+
+		Price totalPrice = calculateTotalPrice(order);
+		PaymentEntity payment = paymentService.save(order.getId(), PaymentMethod.CARD, totalPrice.getAmount());
+
+		var request = PaymentRequest.of(
+				String.valueOf(order.getId()),
+				CardType.of(command.cardType()),
+				CardNumber.of(command.cardNumber()),
+				totalPrice.getAmount()
+		);
+		PaymentResponse paymentResponse = paymentClient.requestPayment(request);
+
+		payment.setTransactionKey(paymentResponse.transactionKey());
+
+		return PaymentInfo.from(payment);
+	}
+
+	private OrderEntity validateAndGetOrder(Long orderId) {
+		OrderEntity order = orderService.getOrder(orderId)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[orderId = " + orderId + "] 주문을 찾을 수 없습니다."));
+
+		if (order.getOrderStatus() != OrderStatus.PENDING) {
+			throw new CoreException(ErrorType.CONFLICT, "결제 대기중인 주문이 아닙니다.");
+		}
+		return order;
+	}
+
+	private Price calculateTotalPrice(OrderEntity order) {
 		Price totalPrice = order.getTotalPrice();
 
-		Price discountedPrice = Optional.ofNullable(command.couponId())
+		return Optional.ofNullable(order.getCouponId())
 				.map(couponId -> {
 					UserCouponEntity coupon = couponService.getUserCouponById(couponId);
 
@@ -83,14 +152,5 @@ public class OrderFacade {
 					return price;
 				})
 				.orElse(totalPrice);
-
-		order.getOrderItems().forEach(item -> productService.decreaseStock(item.getProductId(), item.getQuantity()));
-
-		pointService.deductPoint(user.getId(), Point.of(discountedPrice.getAmount()));
-		paymentService.save(order.getId(), PaymentMethod.POINT, discountedPrice.getAmount());
-
-		order.paymentConfirm();
-
-		return OrderInfo.from(order);
 	}
 }

@@ -29,6 +29,12 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+pg:
+  simul:
+    client-id: 123456
+    callback-url: http://localhost:8080/pg/simul/callback
+
+
 ---
 spring:
   config:
