@@ -43,7 +43,7 @@ public interface PaymentClient {
 			private static final String REGEX = "^\\d{4}-\\d{4}-\\d{4}-\\d{4}$";
 
 			public CardNumber {
-				if (value.matches(REGEX)) {
+				if (value == null || !value.matches(REGEX)) {
 					throw new CoreException(ErrorType.BAD_REQUEST, "카드 번호 형식이 잘못되었습니다. 올바른 형식은 'XXXX-XXXX-XXXX-XXXX'입니다.");
 				}
 			}

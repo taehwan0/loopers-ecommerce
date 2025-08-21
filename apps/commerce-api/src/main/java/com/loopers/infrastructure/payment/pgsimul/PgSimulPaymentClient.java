@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class PgSimulPaymentClient implements PaymentClient {
 
+	private static final String PG_SIMUL_ORDER_ID_PREFIX = "LOOPERS-";
+
 	private final PgSimulatorFeignClient pgSimulatorFeignClient;
 	private final String clientId;
 	private final String callbackUrl;
@@ -26,7 +28,7 @@ public class PgSimulPaymentClient implements PaymentClient {
 	@Override
 	public PaymentResponse requestPayment(PaymentRequest request) {
 		var paymentRequestDTO = new PgSimulDTO.PaymentRequest(
-				request.orderId(),
+				PG_SIMUL_ORDER_ID_PREFIX + request.orderId(),
 				request.cardType().name(),
 				request.cardNo().value(),
 				request.amount(),
