@@ -3,6 +3,7 @@ package com.loopers.application.payment;
 import com.loopers.application.order.CardPaymentCommand;
 import com.loopers.application.order.PaymentInfo;
 import com.loopers.application.order.PointPaymentCommand;
+import com.loopers.application.payment.PaymentCallbackCommand.TransactionStatus;
 import com.loopers.domain.coupon.CouponDiscountCalculator;
 import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.coupon.UserCouponEntity;
@@ -32,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 public class PaymentFacade {
+
+	public static final String ORDER_PREFIX = "LOOPERS_";
 
 	private final PaymentService paymentService;
 	private final OrderService orderService;
@@ -68,7 +71,7 @@ public class PaymentFacade {
 		PaymentEntity payment = paymentService.save(order.getId(), PaymentMethod.CARD, totalPrice.getAmount());
 
 		var request = PaymentRequest.of(
-				String.valueOf(order.getId()),
+				ORDER_PREFIX + order.getId(),
 				CardType.of(command.cardType()),
 				CardNumber.of(command.cardNumber()),
 				totalPrice.getAmount()
@@ -107,5 +110,28 @@ public class PaymentFacade {
 					return price;
 				})
 				.orElse(totalPrice);
+	}
+
+	@Transactional
+	public void handlePaymentCallback(PaymentCallbackCommand command) {
+		// command 들어온 결과 확인하기, pending인 경우에는 아무런 처리도 하지 않는다. 추후 scheduler를 통해서 처리한다.
+		TransactionStatus status = command.status();
+
+		Long orderId = Long.valueOf(command.orderId().replaceFirst(ORDER_PREFIX, ""));
+		OrderEntity order = orderService.getOrder(orderId)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[orderId = " + orderId + "] 주문을 찾을 수 없습니다."));
+
+		PaymentEntity payment = paymentService.getByTransactionKey(command.transactionKey());
+
+		if (status == TransactionStatus.SUCCESS) {
+			order.paymentConfirm();
+			payment.success();
+		}
+
+		if (status == TransactionStatus.FAIL) {
+			order.paymentFailed();
+			payment.fail();
+			// TODO: rollback product stock, coupon etc...
+		}
 	}
 }

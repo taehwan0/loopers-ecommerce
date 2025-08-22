@@ -32,7 +32,7 @@ springdoc:
 pg:
   simul:
     client-id: 123456
-    callback-url: http://localhost:8080/pg/simul/callback
+    callback-url: http://localhost:8080/api/v1/payments/callback
 
 
 ---

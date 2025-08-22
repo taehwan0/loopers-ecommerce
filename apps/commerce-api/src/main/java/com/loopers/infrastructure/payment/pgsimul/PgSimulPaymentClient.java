@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class PgSimulPaymentClient implements PaymentClient {
 
-	private static final String PG_SIMUL_ORDER_ID_PREFIX = "LOOPERS-";
-
 	private final PgSimulatorFeignClient pgSimulatorFeignClient;
 	private final String clientId;
 	private final String callbackUrl;
@@ -28,13 +26,17 @@ public class PgSimulPaymentClient implements PaymentClient {
 	@Override
 	public PaymentResponse requestPayment(PaymentRequest request) {
 		var paymentRequestDTO = new PgSimulDTO.PaymentRequest(
-				PG_SIMUL_ORDER_ID_PREFIX + request.orderId(),
+				request.orderId(),
 				request.cardType().name(),
 				request.cardNo().value(),
 				request.amount(),
 				callbackUrl
 		);
 
+		// 실패하면 재시도를 해야한다.
+		// 재시도까지 실패하면, 결제 실패로 끝낸다.
+		// 요청이 성공했다면, PENDING 상태로 끝낸다.
+		// 실제 결제는 callback을 통해서 처리한다.
 		PgSimulApiResponse<PgSimulDTO.PaymentResponse> response = pgSimulatorFeignClient.requestPayment(clientId, paymentRequestDTO);
 
 		return new PaymentResponse(response.data().transactionKey(), response.data().status());

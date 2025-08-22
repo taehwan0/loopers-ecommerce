@@ -3,8 +3,10 @@ package com.loopers.interfaces.api.payment;
 import com.loopers.application.order.CardPaymentCommand;
 import com.loopers.application.order.PaymentInfo;
 import com.loopers.application.order.PointPaymentCommand;
+import com.loopers.application.payment.PaymentCallbackCommand;
 import com.loopers.application.payment.PaymentFacade;
 import com.loopers.interfaces.api.ApiResponse;
+import com.loopers.interfaces.api.payment.PaymentV1Dto.CallbackRequest;
 import com.loopers.interfaces.api.payment.PaymentV1Dto.CardPaymentRequest;
 import com.loopers.interfaces.api.payment.PaymentV1Dto.PaymentResponse;
 import com.loopers.interfaces.api.payment.PaymentV1Dto.PointPaymentRequest;
@@ -44,5 +46,22 @@ public class PaymentV1Controller implements PaymentV1ApiSpec {
 		PaymentInfo paymentInfo = paymentFacade.paymentByCard(command);
 
 		return ApiResponse.success(PaymentResponse.from(paymentInfo));
+	}
+
+	@PostMapping("/callback")
+	public ApiResponse<Object> handleCallback(@RequestBody CallbackRequest request) {
+		var command = PaymentCallbackCommand.of(
+				request.transactionKey(),
+				request.orderId(),
+				request.cardType(),
+				request.cardNo(),
+				request.amount(),
+				request.status(),
+				request.reason()
+		);
+
+		paymentFacade.handlePaymentCallback(command);
+
+		return ApiResponse.success();
 	}
 }
