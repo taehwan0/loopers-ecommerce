@@ -1,7 +1,10 @@
 package com.loopers.infrastructure.payment.pgsimul;
 
 import com.loopers.domain.payment.PaymentClient;
+import com.loopers.domain.payment.PaymentStatus;
 import com.loopers.infrastructure.payment.pgsimul.PgSimulDTO.PaymentInfoResponse;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +25,8 @@ public class PgSimulPaymentClient implements PaymentClient {
 		this.callbackUrl = callbackUrl;
 	}
 
-
+	@CircuitBreaker(name = "pgSimulator", fallbackMethod = "fallbackRequestPayment")
+	@Retry(name = "pgSimulator")
 	@Override
 	public PaymentResponse requestPayment(PaymentRequest request) {
 		var paymentRequestDTO = new PgSimulDTO.PaymentRequest(
@@ -33,15 +37,16 @@ public class PgSimulPaymentClient implements PaymentClient {
 				callbackUrl
 		);
 
-		// 실패하면 재시도를 해야한다.
-		// 재시도까지 실패하면, 결제 실패로 끝낸다.
-		// 요청이 성공했다면, PENDING 상태로 끝낸다.
-		// 실제 결제는 callback을 통해서 처리한다.
 		PgSimulApiResponse<PgSimulDTO.PaymentResponse> response = pgSimulatorFeignClient.requestPayment(clientId, paymentRequestDTO);
 
 		return new PaymentResponse(response.data().transactionKey(), response.data().status());
 	}
 
+	private PaymentResponse fallbackRequestPayment(PaymentRequest request, Throwable t) {
+		return new PaymentResponse(null, PaymentStatus.PENDING.name());
+	}
+
+	@Retry(name = "pgSimulator")
 	@Override
 	public void getPaymentInfo(String paymentTransactionKey) {
 		PgSimulApiResponse<PaymentInfoResponse> response = pgSimulatorFeignClient.getPaymentInfoByTransactionKey(clientId, paymentTransactionKey);
@@ -50,6 +55,7 @@ public class PgSimulPaymentClient implements PaymentClient {
 		response.data().status();
 	}
 
+	@Retry(name = "pgSimulator")
 	@Override
 	public void getOrderPaymentInfo(String orderId) {
 		var response = pgSimulatorFeignClient.getOrderPaymentInfo(

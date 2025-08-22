@@ -78,6 +78,7 @@ public class PaymentFacade {
 		);
 		PaymentResponse paymentResponse = paymentClient.requestPayment(request);
 
+		// 실패 시 transactionKey가 null이 된다. 이는 Scheduler에서 처리해야한다.
 		payment.setTransactionKey(paymentResponse.transactionKey());
 
 		return PaymentInfo.from(payment);

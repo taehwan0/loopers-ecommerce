@@ -65,9 +65,10 @@ public class PaymentEntity extends BaseEntity {
 	}
 
 	public void setTransactionKey(String transactionKey) {
-		if (transactionKey == null || transactionKey.isBlank()) {
-			throw new CoreException(ErrorType.BAD_REQUEST, "거래 키는 비어있을 수 없습니다.");
+		if (this.transactionKey != null && transactionKey == null) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "거래 키는 비울 수 없습니다.");
 		}
+
 		this.transactionKey = transactionKey;
 	}
 }
