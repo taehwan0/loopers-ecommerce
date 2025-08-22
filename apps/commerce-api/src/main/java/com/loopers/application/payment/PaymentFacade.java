@@ -68,7 +68,12 @@ public class PaymentFacade {
 		OrderEntity order = validateAndGetOrder(command.orderId());
 
 		Price totalPrice = calculateTotalPrice(order);
-		PaymentEntity payment = paymentService.save(order.getId(), PaymentMethod.CARD, totalPrice.getAmount());
+		PaymentEntity payment = paymentService.findPaymentByOrderId(order.getId())
+				.orElse(paymentService.save(order.getId(), PaymentMethod.CARD, totalPrice.getAmount()));
+
+		if (payment.getTransactionKey() != null) {
+			throw new CoreException(ErrorType.CONFLICT, "결제 처리중인 주문입니다.");
+		}
 
 		var request = PaymentRequest.of(
 				ORDER_PREFIX + order.getId(),
@@ -78,7 +83,7 @@ public class PaymentFacade {
 		);
 		PaymentResponse paymentResponse = paymentClient.requestPayment(request);
 
-		// 실패 시 transactionKey가 null이 된다. 이는 Scheduler에서 처리해야한다.
+		// 실패 시 transactionKey가 null이 된다. Card 정보를 알 수 없기 때문에 수동 재요청을 기다린다.
 		payment.setTransactionKey(paymentResponse.transactionKey());
 
 		return PaymentInfo.from(payment);

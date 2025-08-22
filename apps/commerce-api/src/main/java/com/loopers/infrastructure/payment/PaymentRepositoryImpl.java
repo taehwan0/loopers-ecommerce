@@ -18,6 +18,11 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 	}
 
 	@Override
+	public Optional<PaymentEntity> findByIdOrderId(Long orderId) {
+		return paymentJpaRepository.findByOrderId(orderId);
+	}
+
+	@Override
 	public Optional<PaymentEntity> findByTransactionKey(String transactionKey) {
 		return paymentJpaRepository.findByTransactionKey(transactionKey);
 	}
