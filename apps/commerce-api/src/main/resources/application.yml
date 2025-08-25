@@ -23,11 +23,41 @@ spring:
       - logging.yml
       - monitoring.yml
       - redis.yml
+  cloud:
+    openfeign:
+      client:
+        config:
+          pg-simulator:
+            connect-timeout: 1000
+            read-timeout: 2000
 
 springdoc:
   use-fqn: true
   swagger-ui:
     path: /swagger-ui.html
+
+pg:
+  simul:
+    client-id: 123456
+    callback-url: http://localhost:8080/api/v1/payments/callback
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      pgSimulator:
+        sliding-window-size: 20 # 최근 20건 기준으로
+        failure-rate-threshold: 50 # 실패율이 50% 넘으면
+        wait-duration-in-open-state: 10s # 10초 동안 오픈을 유지한다.
+        permitted-number-of-calls-in-half-open-state: 3 # half-open 상태에서 3건의 요청을 통해 close 여부를 결정한다.
+        automatic-transition-from-open-to-half-open-enabled: true # half-open을 사용한다.
+  retry:
+    instances:
+      pgSimulator:
+        max-attempts: 3 # 최대 재시도 횟수
+        wait-duration: 1s # 재시도 간격
+        enable-exponential-backoff: true # 재시도 간격 backoff 사용 여부
+        exponential-backoff-multiplier: 2 # 재시도 간격 backoff 가중치
+
 
 ---
 spring:
