@@ -3,7 +3,7 @@ package com.loopers.domain.payment;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 
-public interface PaymentClient {
+public interface PaymentAdaptor {
 
 	PaymentResponse requestPayment(PaymentRequest request);
 

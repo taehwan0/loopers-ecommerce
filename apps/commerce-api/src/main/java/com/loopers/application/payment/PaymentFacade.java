@@ -10,11 +10,11 @@ import com.loopers.domain.coupon.UserCouponEntity;
 import com.loopers.domain.order.OrderEntity;
 import com.loopers.domain.order.OrderService;
 import com.loopers.domain.order.OrderStatus;
-import com.loopers.domain.payment.PaymentClient;
-import com.loopers.domain.payment.PaymentClient.PaymentRequest;
-import com.loopers.domain.payment.PaymentClient.PaymentRequest.CardNumber;
-import com.loopers.domain.payment.PaymentClient.PaymentRequest.CardType;
-import com.loopers.domain.payment.PaymentClient.PaymentResponse;
+import com.loopers.domain.payment.PaymentAdaptor;
+import com.loopers.domain.payment.PaymentAdaptor.PaymentRequest;
+import com.loopers.domain.payment.PaymentAdaptor.PaymentRequest.CardNumber;
+import com.loopers.domain.payment.PaymentAdaptor.PaymentRequest.CardType;
+import com.loopers.domain.payment.PaymentAdaptor.PaymentResponse;
 import com.loopers.domain.payment.PaymentEntity;
 import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.payment.PaymentService;
@@ -39,7 +39,7 @@ public class PaymentFacade {
 	private final PaymentService paymentService;
 	private final OrderService orderService;
 	private final PointService pointService;
-	private final PaymentClient paymentClient;
+	private final PaymentAdaptor paymentAdaptor;
 	private final CouponService couponService;
 	private final CouponDiscountCalculator couponDiscountCalculator;
 
@@ -81,7 +81,7 @@ public class PaymentFacade {
 				CardNumber.of(command.cardNumber()),
 				totalPrice.getAmount()
 		);
-		PaymentResponse paymentResponse = paymentClient.requestPayment(request);
+		PaymentResponse paymentResponse = paymentAdaptor.requestPayment(request);
 
 		// 실패 시 transactionKey가 null이 된다. Card 정보를 알 수 없기 때문에 수동 재요청을 기다린다.
 		payment.setTransactionKey(paymentResponse.transactionKey());

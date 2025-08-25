@@ -1,6 +1,6 @@
 package com.loopers.infrastructure.payment.pgsimul;
 
-import com.loopers.domain.payment.PaymentClient;
+import com.loopers.domain.payment.PaymentAdaptor;
 import com.loopers.domain.payment.PaymentStatus;
 import com.loopers.infrastructure.payment.pgsimul.PgSimulDTO.PaymentInfoResponse;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -9,13 +9,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PgSimulPaymentClient implements PaymentClient {
+public class PgSimulPaymentAdaptor implements PaymentAdaptor {
 
 	private final PgSimulatorFeignClient pgSimulatorFeignClient;
 	private final String clientId;
 	private final String callbackUrl;
 
-	public PgSimulPaymentClient(
+	public PgSimulPaymentAdaptor(
 			PgSimulatorFeignClient pgSimulatorFeignClient,
 			@Value("${pg.simul.client-id}") String clientId,
 			@Value("${pg.simul.callback-url}") String callbackUrl
