@@ -1,13 +1,16 @@
 package com.loopers.infrastructure.payment.pgsimul;
 
 import com.loopers.domain.payment.PaymentAdaptor;
-import com.loopers.domain.payment.PaymentStatus;
 import com.loopers.infrastructure.payment.pgsimul.PgSimulDTO.PaymentInfoResponse;
+import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorType;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class PgSimulPaymentAdaptor implements PaymentAdaptor {
 
@@ -43,7 +46,8 @@ public class PgSimulPaymentAdaptor implements PaymentAdaptor {
 	}
 
 	private PaymentResponse fallbackRequestPayment(PaymentRequest request, Throwable t) {
-		return new PaymentResponse(null, PaymentStatus.PENDING.name());
+		log.error("PgSimulPayment fail with {}. request={}", request, t.getMessage());
+		throw new CoreException(ErrorType.SERVICE_UNAVAILABLE, "결제 요청에 실패했습니다. 잠시 후 다시 시도해주세요.");
 	}
 
 	@Retry(name = "pgSimulator")
@@ -62,9 +66,7 @@ public class PgSimulPaymentAdaptor implements PaymentAdaptor {
 				clientId,
 				orderId
 		);
-
 		response.data().orderId();
 		response.data().transactions();
-
 	}
 }
