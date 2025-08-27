@@ -9,7 +9,6 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
@@ -19,7 +18,6 @@ public class LikeFacade {
 	private final ProductService productService;
 	private final UserService userService;
 
-	@Transactional
 	public void likeProduct(LikeProductCommand command) {
 		UserEntity user = userService.findByLoginId(command.loginId())
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + command.loginId() + "] 사용자를 찾을 수 없습니다."));
@@ -29,7 +27,6 @@ public class LikeFacade {
 		likeService.likeProduct(user.getId(), product.getId());
 	}
 
-	@Transactional
 	public void unlikeProduct(LikeProductCommand command) {
 		UserEntity user = userService.findByLoginId(command.loginId())
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[loginId = " + command.loginId() + "] 사용자를 찾을 수 없습니다."));
