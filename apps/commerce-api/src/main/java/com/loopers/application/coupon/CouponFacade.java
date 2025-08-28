@@ -4,6 +4,8 @@ import com.loopers.domain.coupon.CouponPolicyEntity;
 import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.coupon.CouponType;
 import com.loopers.domain.coupon.UserCouponEntity;
+import com.loopers.domain.order.OrderService;
+import com.loopers.domain.payment.PaymentEvent;
 import com.loopers.domain.user.UserEntity;
 import com.loopers.domain.user.UserService;
 import com.loopers.support.error.CoreException;
@@ -18,6 +20,7 @@ public class CouponFacade {
 
 	private final CouponService couponService;
 	private final UserService userService;
+	private final OrderService orderService;
 
 	@Transactional
 	public CouponPolicyInfo createCouponPolicy(CreateCouponPolicyCommand command) {
@@ -41,5 +44,19 @@ public class CouponFacade {
 		UserCouponEntity userCouponEntity = couponService.issueCoupon(user.getId(), couponPolicy);
 
 		return UserCouponInfo.from(userCouponEntity);
+	}
+
+	@Transactional
+	public void useCoupon(PaymentEvent.PaymentSuccess event) {
+		orderService.getOrder(event.orderId())
+				.ifPresentOrElse(order -> {
+							if (order.getCouponId() != null) {
+								UserCouponEntity coupon = couponService.getUserCouponById(order.getCouponId());
+								coupon.use();
+							}
+						},
+						() -> {
+							throw new CoreException(ErrorType.NOT_FOUND, "주문을 찾을 수 없습니다. [orderId = " + event.orderId() + "]");
+						});
 	}
 }

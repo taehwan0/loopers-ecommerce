@@ -16,6 +16,7 @@ import com.loopers.domain.payment.PaymentAdaptor.PaymentRequest.CardNumber;
 import com.loopers.domain.payment.PaymentAdaptor.PaymentRequest.CardType;
 import com.loopers.domain.payment.PaymentAdaptor.PaymentResponse;
 import com.loopers.domain.payment.PaymentEntity;
+import com.loopers.domain.payment.PaymentEvent;
 import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.Point;
@@ -27,6 +28,7 @@ import com.loopers.support.error.ErrorType;
 import java.math.BigDecimal;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,7 @@ public class PaymentFacade {
 	private final PaymentAdaptor paymentAdaptor;
 	private final CouponService couponService;
 	private final CouponDiscountCalculator couponDiscountCalculator;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public PaymentInfo paymentByPoint(PointPaymentCommand command) {
@@ -54,10 +57,14 @@ public class PaymentFacade {
 		if (pointAccount.getPointBalance().getValue().compareTo(BigDecimal.valueOf(totalPrice.getAmount())) <= 0) {
 			payment.fail();
 			order.paymentFailed();
+
+			eventPublisher.publishEvent(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId()));
 		} else {
 			pointService.deductPoint(order.getUserId(), Point.of(totalPrice.getAmount()));
 			payment.success();
 			order.paymentConfirm();
+
+			eventPublisher.publishEvent(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId()));
 		}
 
 		return PaymentInfo.from(payment);
@@ -81,9 +88,8 @@ public class PaymentFacade {
 				CardNumber.of(command.cardNumber()),
 				totalPrice.getAmount()
 		);
-		PaymentResponse paymentResponse = paymentAdaptor.requestPayment(request);
 
-		// 실패 시 transactionKey가 null이 된다. Card 정보를 알 수 없기 때문에 수동 재요청을 기다린다.
+		PaymentResponse paymentResponse = paymentAdaptor.requestPayment(request);
 		payment.setTransactionKey(paymentResponse.transactionKey());
 
 		return PaymentInfo.from(payment);
@@ -110,10 +116,7 @@ public class PaymentFacade {
 						throw new CoreException(ErrorType.CONFLICT, "이미 사용된 쿠폰입니다.");
 					}
 
-					Price price = couponDiscountCalculator.calculateDiscount(totalPrice, coupon.getCouponPolicy());
-					coupon.use();
-
-					return price;
+					return couponDiscountCalculator.calculateDiscount(totalPrice, coupon.getCouponPolicy());
 				})
 				.orElse(totalPrice);
 	}
@@ -132,12 +135,13 @@ public class PaymentFacade {
 		if (status == TransactionStatus.SUCCESS) {
 			order.paymentConfirm();
 			payment.success();
+			eventPublisher.publishEvent(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId()));
 		}
 
 		if (status == TransactionStatus.FAIL) {
 			order.paymentFailed();
 			payment.fail();
-			// TODO: rollback product stock, coupon etc...
+			eventPublisher.publishEvent(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId()));
 		}
 	}
 }
