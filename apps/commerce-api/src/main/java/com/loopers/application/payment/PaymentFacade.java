@@ -126,7 +126,8 @@ public class PaymentFacade {
 		// command 들어온 결과 확인하기, pending인 경우에는 아무런 처리도 하지 않는다. 추후 scheduler를 통해서 처리한다.
 		TransactionStatus status = command.status();
 		PaymentEntity payment = paymentService.getByTransactionKey(command.transactionKey());
-		// PG 조회를 통한 유효성 검증 필요!
+
+		// TODO: PG 조회를 통한 유효성 검증 필요!
 
 		if (status == TransactionStatus.SUCCESS) {
 			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));

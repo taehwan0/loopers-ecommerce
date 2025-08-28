@@ -3,7 +3,7 @@ package com.loopers.domain.push;
 import java.util.List;
 
 // 주문(+결제) 성공 시 외부 알림을 보내기 위한 서비스
-public interface PushService {
+public interface DataFlatformService {
 
 	void sendOrderSuccessPush(UserInfo user, OrderInfo order, PaymentInfo payment);
 

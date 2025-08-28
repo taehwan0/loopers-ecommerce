@@ -1,6 +1,6 @@
 package com.loopers.infrastructure.push;
 
-import com.loopers.domain.push.PushService;
+import com.loopers.domain.push.DataFlatformService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class MockPushService implements PushService {
+public class MockDataFlatformService implements DataFlatformService {
 
 	@Override
 	public void sendOrderSuccessPush(UserInfo user, OrderInfo order, PaymentInfo payment) {
