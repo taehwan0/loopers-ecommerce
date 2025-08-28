@@ -1,5 +1,6 @@
-package com.loopers.application.payment;
+package com.loopers.interfaces.listener.payment;
 
+import com.loopers.application.payment.PaymentFacade;
 import com.loopers.domain.payment.PaymentEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;

@@ -1,5 +1,6 @@
-package com.loopers.application.coupon;
+package com.loopers.interfaces.listener.coupon;
 
+import com.loopers.application.coupon.CouponFacade;
 import com.loopers.domain.payment.PaymentEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;

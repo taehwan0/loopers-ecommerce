@@ -1,7 +1,7 @@
-package com.loopers.application.like;
+package com.loopers.interfaces.listener.like;
 
+import com.loopers.application.like.LikeFacade;
 import com.loopers.domain.like.LikeEvent;
-import com.loopers.domain.like.LikeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -12,17 +12,17 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 public class LikeListener {
 
-	private final LikeService likeService;
+	private final LikeFacade likeFacade;
 
 	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void handleLikeEvent(LikeEvent.ProductLike productLikeEvent) {
-		likeService.increaseProductLikeCount(productLikeEvent.productId());
+		likeFacade.increaseProductLikeCount(productLikeEvent.productId());
 	}
 
 	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void handleUnlikeEvent(LikeEvent.ProductUnlike productUnlikeEvent) {
-		likeService.decreaseProductLikeCount(productUnlikeEvent.productId());
+		likeFacade.decreaseProductLikeCount(productUnlikeEvent.productId());
 	}
 }
