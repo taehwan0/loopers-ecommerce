@@ -149,6 +149,30 @@ public class PaymentFacade {
 
 		PaymentEntity payment = paymentService.getById(event.paymentId());
 		payment.success();
+
+		var user = userService.getUser(order.getUserId())
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+
+		pushService.sendOrderSuccessPush(
+				new PushService.UserInfo(
+						user.getLoginId(),
+						user.getName()
+				),
+				new PushService.OrderInfo(
+						order.getOrderStatus().name(),
+						order.getOrderItems()
+								.stream()
+								.map(item -> new PushService.OrderItemInfo(
+										productService.getProduct(item.getProductId()).getName(),
+										item.getQuantity()
+								))
+								.toList()
+				),
+				new PushService.PaymentInfo(
+						payment.getPaymentMethod().name(),
+						payment.getAmount()
+				)
+		);
 	}
 
 	@Transactional
