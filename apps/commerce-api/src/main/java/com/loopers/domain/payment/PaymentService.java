@@ -21,6 +21,11 @@ public class PaymentService {
 		return paymentRepository.findByIdOrderId(orderId);
 	}
 
+	public PaymentEntity getById(Long id) {
+		return paymentRepository.findById(id)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[id = " + id + "] 결제 정보를 찾을 수 없습니다."));
+	}
+
 	public PaymentEntity getByTransactionKey(String transactionKey) {
 		return paymentRepository.findByTransactionKey(transactionKey)
 				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[transactionKey = " + transactionKey + "] 결제 정보를 찾을 수 없습니다."));

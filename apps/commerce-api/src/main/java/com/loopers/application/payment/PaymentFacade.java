@@ -16,11 +16,14 @@ import com.loopers.domain.payment.PaymentAdaptor.PaymentRequest.CardNumber;
 import com.loopers.domain.payment.PaymentAdaptor.PaymentRequest.CardType;
 import com.loopers.domain.payment.PaymentAdaptor.PaymentResponse;
 import com.loopers.domain.payment.PaymentEntity;
+import com.loopers.domain.payment.PaymentEvent;
 import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointAccountEntity;
 import com.loopers.domain.point.PointService;
+import com.loopers.domain.shared.DomainEvent;
+import com.loopers.domain.shared.DomainEventPublisher;
 import com.loopers.domain.vo.Price;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
@@ -42,6 +45,7 @@ public class PaymentFacade {
 	private final PaymentAdaptor paymentAdaptor;
 	private final CouponService couponService;
 	private final CouponDiscountCalculator couponDiscountCalculator;
+	private final DomainEventPublisher eventPublisher;
 
 	@Transactional
 	public PaymentInfo paymentByPoint(PointPaymentCommand command) {
@@ -54,10 +58,14 @@ public class PaymentFacade {
 		if (pointAccount.getPointBalance().getValue().compareTo(BigDecimal.valueOf(totalPrice.getAmount())) <= 0) {
 			payment.fail();
 			order.paymentFailed();
+
+			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId())));
 		} else {
 			pointService.deductPoint(order.getUserId(), Point.of(totalPrice.getAmount()));
 			payment.success();
 			order.paymentConfirm();
+
+			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));
 		}
 
 		return PaymentInfo.from(payment);
@@ -81,21 +89,20 @@ public class PaymentFacade {
 				CardNumber.of(command.cardNumber()),
 				totalPrice.getAmount()
 		);
-		PaymentResponse paymentResponse = paymentAdaptor.requestPayment(request);
 
-		// 실패 시 transactionKey가 null이 된다. Card 정보를 알 수 없기 때문에 수동 재요청을 기다린다.
+		PaymentResponse paymentResponse = paymentAdaptor.requestPayment(request);
 		payment.setTransactionKey(paymentResponse.transactionKey());
 
 		return PaymentInfo.from(payment);
 	}
 
 	private OrderEntity validateAndGetOrder(Long orderId) {
-		OrderEntity order = orderService.getOrder(orderId)
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[orderId = " + orderId + "] 주문을 찾을 수 없습니다."));
+		OrderEntity order = orderService.getOrder(orderId);
 
 		if (order.getOrderStatus() != OrderStatus.PENDING) {
 			throw new CoreException(ErrorType.CONFLICT, "결제 대기중인 주문이 아닙니다.");
 		}
+
 		return order;
 	}
 
@@ -110,34 +117,24 @@ public class PaymentFacade {
 						throw new CoreException(ErrorType.CONFLICT, "이미 사용된 쿠폰입니다.");
 					}
 
-					Price price = couponDiscountCalculator.calculateDiscount(totalPrice, coupon.getCouponPolicy());
-					coupon.use();
-
-					return price;
+					return couponDiscountCalculator.calculateDiscount(totalPrice, coupon.getCouponPolicy());
 				})
 				.orElse(totalPrice);
 	}
 
-	@Transactional
 	public void handlePaymentCallback(PaymentCallbackCommand command) {
 		// command 들어온 결과 확인하기, pending인 경우에는 아무런 처리도 하지 않는다. 추후 scheduler를 통해서 처리한다.
 		TransactionStatus status = command.status();
-
-		Long orderId = Long.valueOf(command.orderId().replaceFirst(ORDER_PREFIX, ""));
-		OrderEntity order = orderService.getOrder(orderId)
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[orderId = " + orderId + "] 주문을 찾을 수 없습니다."));
-
 		PaymentEntity payment = paymentService.getByTransactionKey(command.transactionKey());
 
+		// TODO: PG 조회를 통한 유효성 검증 필요!
+
 		if (status == TransactionStatus.SUCCESS) {
-			order.paymentConfirm();
-			payment.success();
+			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));
 		}
 
 		if (status == TransactionStatus.FAIL) {
-			order.paymentFailed();
-			payment.fail();
-			// TODO: rollback product stock, coupon etc...
+			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId())));
 		}
 	}
 }

@@ -39,4 +39,12 @@ public class Stock {
 
 		this.quantity -= quantity;
 	}
+
+	protected void increaseQuantity(int quantity) {
+		if (quantity < 0 ) {
+			throw new CoreException(ErrorType.BAD_REQUEST, "0이하의 숫자를 입력할 수 없습니다.");
+		}
+
+		this.quantity += quantity;
+	}
 }
