@@ -38,12 +38,4 @@ public class LikeFacade {
 		likeService.unlikeProduct(user.getId(), product.getId());
 		eventPublisher.publish(DomainEvent.of(LikeEvent.ProductUnlike.of(user.getId(), product.getId())));
 	}
-
-	public void increaseProductLikeCount(Long productId) {
-		likeService.increaseProductLikeCount(productId);
-	}
-
-	public void decreaseProductLikeCount(Long productId) {
-		likeService.decreaseProductLikeCount(productId);
-	}
 }

@@ -4,9 +4,7 @@ import com.loopers.domain.coupon.CouponPolicyEntity;
 import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.coupon.CouponType;
 import com.loopers.domain.coupon.UserCouponEntity;
-import com.loopers.domain.order.OrderEntity;
 import com.loopers.domain.order.OrderService;
-import com.loopers.domain.payment.PaymentEvent;
 import com.loopers.domain.user.UserEntity;
 import com.loopers.domain.user.UserService;
 import com.loopers.support.error.CoreException;
@@ -45,14 +43,5 @@ public class CouponFacade {
 		UserCouponEntity userCouponEntity = couponService.issueCoupon(user.getId(), couponPolicy);
 
 		return UserCouponInfo.from(userCouponEntity);
-	}
-
-	@Transactional
-	public void useCoupon(PaymentEvent.PaymentSuccess event) {
-		OrderEntity order = orderService.getOrder(event.orderId());
-		if (order.getCouponId() != null) {
-			UserCouponEntity coupon = couponService.getUserCouponById(order.getCouponId());
-			coupon.use();
-		}
 	}
 }
