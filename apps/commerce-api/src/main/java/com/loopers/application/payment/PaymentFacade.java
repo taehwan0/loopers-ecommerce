@@ -22,6 +22,9 @@ import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointAccountEntity;
 import com.loopers.domain.point.PointService;
+import com.loopers.domain.product.ProductService;
+import com.loopers.domain.push.PushService;
+import com.loopers.domain.user.UserService;
 import com.loopers.domain.vo.Price;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
@@ -45,6 +48,9 @@ public class PaymentFacade {
 	private final CouponService couponService;
 	private final CouponDiscountCalculator couponDiscountCalculator;
 	private final ApplicationEventPublisher eventPublisher;
+	private final ProductService productService;
+	private final PushService pushService;
+	private final UserService userService;
 
 	@Transactional
 	public PaymentInfo paymentByPoint(PointPaymentCommand command) {
@@ -96,12 +102,12 @@ public class PaymentFacade {
 	}
 
 	private OrderEntity validateAndGetOrder(Long orderId) {
-		OrderEntity order = orderService.getOrder(orderId)
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[orderId = " + orderId + "] 주문을 찾을 수 없습니다."));
+		OrderEntity order = orderService.getOrder(orderId);
 
 		if (order.getOrderStatus() != OrderStatus.PENDING) {
 			throw new CoreException(ErrorType.CONFLICT, "결제 대기중인 주문이 아닙니다.");
 		}
+
 		return order;
 	}
 
@@ -121,27 +127,38 @@ public class PaymentFacade {
 				.orElse(totalPrice);
 	}
 
-	@Transactional
 	public void handlePaymentCallback(PaymentCallbackCommand command) {
 		// command 들어온 결과 확인하기, pending인 경우에는 아무런 처리도 하지 않는다. 추후 scheduler를 통해서 처리한다.
 		TransactionStatus status = command.status();
-
-		Long orderId = Long.valueOf(command.orderId().replaceFirst(ORDER_PREFIX, ""));
-		OrderEntity order = orderService.getOrder(orderId)
-				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[orderId = " + orderId + "] 주문을 찾을 수 없습니다."));
-
 		PaymentEntity payment = paymentService.getByTransactionKey(command.transactionKey());
+		// PG 조회를 통한 유효성 검증 필요!
 
 		if (status == TransactionStatus.SUCCESS) {
-			order.paymentConfirm();
-			payment.success();
 			eventPublisher.publishEvent(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId()));
 		}
 
 		if (status == TransactionStatus.FAIL) {
-			order.paymentFailed();
-			payment.fail();
 			eventPublisher.publishEvent(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId()));
 		}
+	}
+
+	@Transactional
+	public void paymentSuccess(PaymentEvent.PaymentSuccess event) {
+		OrderEntity order = orderService.getOrder(event.orderId());
+		order.paymentConfirm();
+
+		PaymentEntity payment = paymentService.getById(event.paymentId());
+		payment.success();
+	}
+
+	@Transactional
+	public void paymentFail(PaymentEvent.PaymentFail event) {
+		OrderEntity order = orderService.getOrder(event.orderId());
+		order.paymentFailed();
+
+		PaymentEntity payment = paymentService.getById(event.paymentId());
+		payment.fail();
+
+		order.getOrderItems().forEach(item -> productService.increaseStock(item.getProductId(), item.getQuantity()));
 	}
 }

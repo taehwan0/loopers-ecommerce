@@ -1,5 +1,7 @@
 package com.loopers.domain.order;
 
+import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,8 +14,9 @@ public class OrderService {
 
 	private final OrderRepository orderRepository;
 
-	public Optional<OrderEntity> getOrder(Long id) {
-		return orderRepository.findById(id);
+	public OrderEntity getOrder(Long id) {
+		return orderRepository.findById(id)
+				.orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "[id = " + id + "] 주문을 찾을 수 없습니다."));
 	}
 
 	public Optional<OrderEntity> getOrder(UUID idempotencyKey) {
