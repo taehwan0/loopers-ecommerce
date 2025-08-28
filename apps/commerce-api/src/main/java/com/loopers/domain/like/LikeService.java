@@ -1,7 +1,6 @@
 package com.loopers.domain.like;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,32 +10,23 @@ public class LikeService {
 
 	private final LikeRepository likeRepository;
 	private final LikeCountRepository likeCountRepository;
-	private final ApplicationEventPublisher eventPublisher;
 
 	public LikeCountEntity initLikeCount(Long targetId, LikeTargetType targetType) {
 		LikeTarget likeTarget = LikeTarget.of(targetId, targetType);
 		return likeCountRepository.save(LikeCountEntity.of(likeTarget));
 	}
 
-	@Transactional
 	public void likeProduct(Long userId, Long productId) {
 		if (likeRepository.findByUserIdAndProductId(userId, productId).isPresent()) {
 			return;
 		}
 
 		likeRepository.save(LikeEntity.of(userId, LikeTarget.of(productId, LikeTargetType.PRODUCT)));
-		eventPublisher.publishEvent(LikeEvent.ProductLike.of(userId, productId));
 	}
 
-	@Transactional
 	public void unlikeProduct(Long userId, Long productId) {
 		likeRepository.findByUserIdAndProductId(userId, productId)
-				.ifPresent(
-						like -> {
-							likeRepository.delete(like);
-							eventPublisher.publishEvent(LikeEvent.ProductUnlike.of(userId, productId));
-						}
-				);
+				.ifPresent(likeRepository::delete);
 	}
 
 	@Transactional

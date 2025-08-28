@@ -11,7 +11,6 @@ import static org.mockito.Mockito.verify;
 import com.loopers.application.like.LikeFacade;
 import com.loopers.application.like.LikeProductCommand;
 import com.loopers.domain.brand.BrandEntity;
-import com.loopers.domain.like.LikeEvent.ProductLike;
 import com.loopers.domain.product.ProductEntity;
 import com.loopers.domain.product.Stock;
 import com.loopers.domain.user.Gender;
@@ -290,7 +289,7 @@ class LikeIntegrationTest {
 			executor.shutdown();
 
 			// assert
-			long count = applicationEvents.stream(ProductLike.class).count();
+			long count = applicationEvents.stream(LikeEvent.ProductLike.class).count();
 			assertThat(count).isEqualTo(100L);
 		}
 	}

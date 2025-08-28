@@ -24,6 +24,8 @@ import com.loopers.domain.point.PointAccountEntity;
 import com.loopers.domain.point.PointService;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.push.PushService;
+import com.loopers.domain.shared.DomainEvent;
+import com.loopers.domain.shared.DomainEventPublisher;
 import com.loopers.domain.user.UserService;
 import com.loopers.domain.vo.Price;
 import com.loopers.support.error.CoreException;
@@ -31,7 +33,6 @@ import com.loopers.support.error.ErrorType;
 import java.math.BigDecimal;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +48,7 @@ public class PaymentFacade {
 	private final PaymentAdaptor paymentAdaptor;
 	private final CouponService couponService;
 	private final CouponDiscountCalculator couponDiscountCalculator;
-	private final ApplicationEventPublisher eventPublisher;
+	private final DomainEventPublisher eventPublisher;
 	private final ProductService productService;
 	private final PushService pushService;
 	private final UserService userService;
@@ -64,13 +65,13 @@ public class PaymentFacade {
 			payment.fail();
 			order.paymentFailed();
 
-			eventPublisher.publishEvent(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId()));
+			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId())));
 		} else {
 			pointService.deductPoint(order.getUserId(), Point.of(totalPrice.getAmount()));
 			payment.success();
 			order.paymentConfirm();
 
-			eventPublisher.publishEvent(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId()));
+			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));
 		}
 
 		return PaymentInfo.from(payment);
@@ -134,11 +135,11 @@ public class PaymentFacade {
 		// PG 조회를 통한 유효성 검증 필요!
 
 		if (status == TransactionStatus.SUCCESS) {
-			eventPublisher.publishEvent(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId()));
+			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));
 		}
 
 		if (status == TransactionStatus.FAIL) {
-			eventPublisher.publishEvent(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId()));
+			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId())));
 		}
 	}
 
