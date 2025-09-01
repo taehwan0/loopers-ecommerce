@@ -36,7 +36,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
+@RecordApplicationEvents
 @SpringBootTest
 class LikeIntegrationTest {
 
@@ -67,6 +70,9 @@ class LikeIntegrationTest {
 
 	@Autowired
 	LikeCountJpaRepository likeCountJpaRepository;
+
+	@Autowired
+	ApplicationEvents applicationEvents;
 
 	UserEntity createUser() {
 		return userJpaRepository.save(UserEntity.of(
@@ -257,7 +263,7 @@ class LikeIntegrationTest {
 			ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
 
 			ProductEntity product = createProduct();
-			LikeCountEntity likeCount = createLikeCount(product.getId());
+			createLikeCount(product.getId());
 
 			List<UserEntity> users = IntStream.range(0, numberOfThreads)
 					.mapToObj(LikeIntegrationTest.this::createUser)
@@ -283,11 +289,8 @@ class LikeIntegrationTest {
 			executor.shutdown();
 
 			// assert
-			LikeCountEntity productLikeCount = likeCountJpaRepository.findById(likeCount.getId()).get();
-			assertAll(
-					() -> assertThat(productLikeCount).isNotNull(),
-					() -> assertThat(productLikeCount.getLikeCount()).isEqualTo(numberOfThreads)
-			);
+			long count = applicationEvents.stream(LikeEvent.ProductLike.class).count();
+			assertThat(count).isEqualTo(100L);
 		}
 	}
 }

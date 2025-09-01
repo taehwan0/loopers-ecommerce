@@ -4,6 +4,7 @@ import com.loopers.domain.coupon.CouponPolicyEntity;
 import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.coupon.CouponType;
 import com.loopers.domain.coupon.UserCouponEntity;
+import com.loopers.domain.order.OrderService;
 import com.loopers.domain.user.UserEntity;
 import com.loopers.domain.user.UserService;
 import com.loopers.support.error.CoreException;
@@ -18,6 +19,7 @@ public class CouponFacade {
 
 	private final CouponService couponService;
 	private final UserService userService;
+	private final OrderService orderService;
 
 	@Transactional
 	public CouponPolicyInfo createCouponPolicy(CreateCouponPolicyCommand command) {

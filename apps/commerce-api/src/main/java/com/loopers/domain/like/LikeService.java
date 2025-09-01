@@ -1,6 +1,5 @@
 package com.loopers.domain.like;
 
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,47 +16,36 @@ public class LikeService {
 		return likeCountRepository.save(LikeCountEntity.of(likeTarget));
 	}
 
-	@Transactional
 	public void likeProduct(Long userId, Long productId) {
-		Optional<LikeEntity> likeOptional = likeRepository.findByUserIdAndProductId(userId, productId);
-
-		if (likeOptional.isPresent()) {
+		if (likeRepository.findByUserIdAndProductId(userId, productId).isPresent()) {
 			return;
 		}
 
-		likeCountRepository.getTargetLikeCountWithPessimisticWriteLock(productId, LikeTargetType.PRODUCT)
-				.ifPresentOrElse(likeCount -> {
-							likeRepository.save(LikeEntity.of(userId, LikeTarget.of(productId, LikeTargetType.PRODUCT)));
-							likeCount.increaseLikeCount();
-						},
-						() -> {
-							LikeTarget likeTarget = LikeTarget.of(productId, LikeTargetType.PRODUCT);
-							likeRepository.save(LikeEntity.of(userId, likeTarget));
+		likeRepository.save(LikeEntity.of(userId, LikeTarget.of(productId, LikeTargetType.PRODUCT)));
+	}
 
-							LikeCountEntity likeCount = likeCountRepository.save(LikeCountEntity.of(likeTarget));
-							likeCount.increaseLikeCount();
-						}
-				);
+	public void unlikeProduct(Long userId, Long productId) {
+		likeRepository.findByUserIdAndProductId(userId, productId)
+				.ifPresent(likeRepository::delete);
 	}
 
 	@Transactional
-	public void unlikeProduct(Long userId, Long productId) {
-		Optional<LikeEntity> likeOptional = likeRepository.findByUserIdAndProductId(userId, productId);
-
-		if (likeOptional.isEmpty()) {
-			return;
-		}
-
+	public void increaseProductLikeCount(Long productId) {
 		likeCountRepository.getTargetLikeCountWithPessimisticWriteLock(productId, LikeTargetType.PRODUCT)
-				.ifPresent(likeCount -> {
-							likeRepository.save(LikeEntity.of(userId, LikeTarget.of(productId, LikeTargetType.PRODUCT)));
-							likeCount.decreaseLikeCount();
-						}
-				);
+				.ifPresentOrElse(
+						LikeCountEntity::increaseLikeCount,
+						() -> {
+							LikeCountEntity likeCount = initLikeCount(productId, LikeTargetType.PRODUCT);
+							likeCount.increaseLikeCount();
+						});
 	}
 
-	public LikeCountEntity getProductLikeCount(Long productId) {
-		return likeCountRepository.getTargetLikeCount(productId, LikeTargetType.PRODUCT)
-				.orElseGet(() -> initLikeCount(productId, LikeTargetType.PRODUCT));
+	@Transactional
+	public void decreaseProductLikeCount(Long productId) {
+		likeCountRepository.getTargetLikeCountWithPessimisticWriteLock(productId, LikeTargetType.PRODUCT)
+				.ifPresentOrElse(
+						LikeCountEntity::decreaseLikeCount,
+						() -> initLikeCount(productId, LikeTargetType.PRODUCT)
+				);
 	}
 }
