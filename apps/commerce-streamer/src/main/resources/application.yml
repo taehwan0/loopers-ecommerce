@@ -1,4 +1,5 @@
 server:
+  port: 8000
   shutdown: graceful
   tomcat:
     threads:
@@ -34,6 +35,10 @@ spring:
   config:
     activate:
       on-profile: local, test
+
+management:
+  server:
+    port: 8001
 
 ---
 spring:
