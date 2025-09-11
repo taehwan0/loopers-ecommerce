@@ -22,8 +22,8 @@ import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointAccountEntity;
 import com.loopers.domain.point.PointService;
-import com.loopers.domain.shared.DomainEvent;
-import com.loopers.domain.shared.DomainEventPublisher;
+import com.loopers.domain.shared.Event;
+import com.loopers.domain.shared.EventPublisher;
 import com.loopers.domain.vo.Price;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
@@ -45,7 +45,7 @@ public class PaymentFacade {
 	private final PaymentAdaptor paymentAdaptor;
 	private final CouponService couponService;
 	private final CouponDiscountCalculator couponDiscountCalculator;
-	private final DomainEventPublisher eventPublisher;
+	private final EventPublisher eventPublisher;
 
 	@Transactional
 	public PaymentInfo paymentByPoint(PointPaymentCommand command) {
@@ -59,13 +59,13 @@ public class PaymentFacade {
 			payment.fail();
 			order.paymentFailed();
 
-			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId())));
+			eventPublisher.publish(Event.of(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId())));
 		} else {
 			pointService.deductPoint(order.getUserId(), Point.of(totalPrice.getAmount()));
 			payment.success();
 			order.paymentConfirm();
 
-			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));
+			eventPublisher.publish(Event.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));
 		}
 
 		return PaymentInfo.from(payment);
@@ -130,11 +130,11 @@ public class PaymentFacade {
 		// TODO: PG 조회를 통한 유효성 검증 필요!
 
 		if (status == TransactionStatus.SUCCESS) {
-			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));
+			eventPublisher.publish(Event.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));
 		}
 
 		if (status == TransactionStatus.FAIL) {
-			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId())));
+			eventPublisher.publish(Event.of(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId())));
 		}
 	}
 }
