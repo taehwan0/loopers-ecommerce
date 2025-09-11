@@ -1,7 +1,7 @@
 package com.loopers.interfaces.listener.dataplatform;
 
 import com.loopers.application.dataplatform.DataPlatformEventHandler;
-import com.loopers.domain.payment.PaymentEvent;
+import com.loopers.payload.payment.PaymentSuccessEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -15,7 +15,7 @@ public class DataPlatformListener {
 
 	@Async
 	@EventListener
-	public void handleDataPlatformEvent(PaymentEvent.PaymentSuccess event) {
+	public void handleDataPlatformEvent(PaymentSuccessEvent event) {
 		dataPlatformEventHandler.sendOrderSuccessPush(event);
 	}
 }

@@ -1,5 +1,6 @@
 package com.loopers.application.payment;
 
+import com.loopers.EventPublisher;
 import com.loopers.application.order.CardPaymentCommand;
 import com.loopers.application.order.PaymentInfo;
 import com.loopers.application.order.PointPaymentCommand;
@@ -16,15 +17,14 @@ import com.loopers.domain.payment.PaymentAdaptor.PaymentRequest.CardNumber;
 import com.loopers.domain.payment.PaymentAdaptor.PaymentRequest.CardType;
 import com.loopers.domain.payment.PaymentAdaptor.PaymentResponse;
 import com.loopers.domain.payment.PaymentEntity;
-import com.loopers.domain.payment.PaymentEvent;
 import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointAccountEntity;
 import com.loopers.domain.point.PointService;
-import com.loopers.domain.shared.DomainEvent;
-import com.loopers.domain.shared.DomainEventPublisher;
 import com.loopers.domain.vo.Price;
+import com.loopers.payload.payment.PaymentFailEvent;
+import com.loopers.payload.payment.PaymentSuccessEvent;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.math.BigDecimal;
@@ -45,7 +45,7 @@ public class PaymentFacade {
 	private final PaymentAdaptor paymentAdaptor;
 	private final CouponService couponService;
 	private final CouponDiscountCalculator couponDiscountCalculator;
-	private final DomainEventPublisher eventPublisher;
+	private final EventPublisher eventPublisher;
 
 	@Transactional
 	public PaymentInfo paymentByPoint(PointPaymentCommand command) {
@@ -59,13 +59,13 @@ public class PaymentFacade {
 			payment.fail();
 			order.paymentFailed();
 
-			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId())));
+			eventPublisher.publish(PaymentFailEvent.of(order.getId(), payment.getId(), payment.getTransactionKey()));
 		} else {
 			pointService.deductPoint(order.getUserId(), Point.of(totalPrice.getAmount()));
 			payment.success();
 			order.paymentConfirm();
 
-			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));
+			eventPublisher.publish(PaymentSuccessEvent.of(order.getId(), payment.getId(), payment.getTransactionKey()));
 		}
 
 		return PaymentInfo.from(payment);
@@ -130,11 +130,11 @@ public class PaymentFacade {
 		// TODO: PG 조회를 통한 유효성 검증 필요!
 
 		if (status == TransactionStatus.SUCCESS) {
-			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentSuccess.of(payment.getOrderId(), payment.getId())));
+			eventPublisher.publish(PaymentSuccessEvent.of(payment.getOrderId(), payment.getId(), payment.getTransactionKey()));
 		}
 
 		if (status == TransactionStatus.FAIL) {
-			eventPublisher.publish(DomainEvent.of(PaymentEvent.PaymentFail.of(payment.getOrderId(), payment.getId())));
+			eventPublisher.publish(PaymentFailEvent.of(payment.getOrderId(), payment.getId(), payment.getTransactionKey()));
 		}
 	}
 }
