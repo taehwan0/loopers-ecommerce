@@ -4,7 +4,7 @@ import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.coupon.UserCouponEntity;
 import com.loopers.domain.order.OrderEntity;
 import com.loopers.domain.order.OrderService;
-import com.loopers.domain.payment.PaymentEvent;
+import com.loopers.payload.payment.PaymentSuccessEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +17,7 @@ public class CouponEventHandler {
 	private final CouponService couponService;
 
 	@Transactional
-	public void useCoupon(PaymentEvent.PaymentSuccess event) {
+	public void useCoupon(PaymentSuccessEvent event) {
 		OrderEntity order = orderService.getOrder(event.orderId());
 		if (order.getCouponId() != null) {
 			UserCouponEntity coupon = couponService.getUserCouponById(order.getCouponId());

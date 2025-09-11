@@ -1,13 +1,13 @@
 package com.loopers.application.like;
 
-import com.loopers.domain.like.LikeEvent;
+import com.loopers.EventPublisher;
 import com.loopers.domain.like.LikeService;
 import com.loopers.domain.product.ProductEntity;
 import com.loopers.domain.product.ProductService;
-import com.loopers.domain.shared.Event;
-import com.loopers.domain.shared.EventPublisher;
 import com.loopers.domain.user.UserEntity;
 import com.loopers.domain.user.UserService;
+import com.loopers.payload.like.ProductLikedEvent;
+import com.loopers.payload.like.ProductUnlikedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +27,7 @@ public class LikeFacade {
 		ProductEntity product = productService.getProduct(command.productId());
 
 		likeService.likeProduct(user.getId(), product.getId());
-		eventPublisher.publish(Event.of(LikeEvent.ProductLike.of(user.getId(), product.getId())));
+		eventPublisher.publish(ProductLikedEvent.of(product.getId()));
 	}
 
 	@Transactional
@@ -36,6 +36,6 @@ public class LikeFacade {
 		ProductEntity product = productService.getProduct(command.productId());
 
 		likeService.unlikeProduct(user.getId(), product.getId());
-		eventPublisher.publish(Event.of(LikeEvent.ProductUnlike.of(user.getId(), product.getId())));
+		eventPublisher.publish(ProductUnlikedEvent.of(product.getId()));
 	}
 }

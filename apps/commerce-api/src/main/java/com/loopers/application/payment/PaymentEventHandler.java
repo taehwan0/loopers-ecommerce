@@ -3,9 +3,10 @@ package com.loopers.application.payment;
 import com.loopers.domain.order.OrderEntity;
 import com.loopers.domain.order.OrderService;
 import com.loopers.domain.payment.PaymentEntity;
-import com.loopers.domain.payment.PaymentEvent;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.product.ProductService;
+import com.loopers.payload.payment.PaymentFailEvent;
+import com.loopers.payload.payment.PaymentSuccessEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +20,7 @@ public class PaymentEventHandler {
 	private final ProductService productService;
 
 	@Transactional
-	public void paymentSuccess(PaymentEvent.PaymentSuccess event) {
+	public void paymentSuccess(PaymentSuccessEvent event) {
 		OrderEntity order = orderService.getOrder(event.orderId());
 		order.paymentConfirm();
 
@@ -28,7 +29,7 @@ public class PaymentEventHandler {
 	}
 
 	@Transactional
-	public void paymentFail(PaymentEvent.PaymentFail event) {
+	public void paymentFail(PaymentFailEvent event) {
 		OrderEntity order = orderService.getOrder(event.orderId());
 		order.paymentFailed();
 

@@ -1,7 +1,8 @@
 package com.loopers.application.like;
 
-import com.loopers.domain.like.LikeEvent;
 import com.loopers.domain.like.LikeService;
+import com.loopers.payload.like.ProductLikedEvent;
+import com.loopers.payload.like.ProductUnlikedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,11 +12,11 @@ public class LikeEventHandler {
 
 	private final LikeService likeService;
 
-	public void increaseProductLikeCount(LikeEvent.ProductLike event) {
+	public void increaseProductLikeCount(ProductLikedEvent event) {
 		likeService.increaseProductLikeCount(event.productId());
 	}
 
-	public void decreaseProductLikeCount(LikeEvent.ProductUnlike event) {
+	public void decreaseProductLikeCount(ProductUnlikedEvent event) {
 		likeService.decreaseProductLikeCount(event.productId());
 	}
 }

@@ -1,11 +1,11 @@
 package com.loopers.application.dataplatform;
 
 import com.loopers.domain.order.OrderService;
-import com.loopers.domain.payment.PaymentEvent;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.push.DataPlatformService;
 import com.loopers.domain.user.UserService;
+import com.loopers.payload.payment.PaymentSuccessEvent;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class DataPlatformEventHandler {
 	private final ProductService productService;
 	private final PaymentService paymentService;
 
-	public void sendOrderSuccessPush(PaymentEvent.PaymentSuccess event) {
+	public void sendOrderSuccessPush(PaymentSuccessEvent event) {
 		var order = orderService.getOrder(event.orderId());
 		var payment =  paymentService.getById(event.paymentId());
 
